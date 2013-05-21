@@ -15,7 +15,7 @@ module AudioPlayer(
       $readmemh("audio-durs.dat", audioDurs, 0, audioFrameCount - 1);
    end
 
-   wire sequencerTrigger;
+   wire tickSequencer;
    GenericCounter #(
       .COUNTER_WIDTH(16),
       .COUNTER_MAX(48828)
@@ -23,7 +23,7 @@ module AudioPlayer(
       .CLK(CLK),
       .RESET(1'b0),
       .ENABLE_IN(1'b1),
-      .TRIG_OUT(sequencerTrigger)
+      .TRIG_OUT(tickSequencer)
    );
 
    reg [frameBits - 1:0] currFrame = 0;
@@ -32,7 +32,7 @@ module AudioPlayer(
    reg synthEnable = 0;
 
    always@(posedge CLK) begin
-      if (sequencerTrigger) begin
+      if (tickSequencer) begin
          if (framePos == 0) begin
             synthEnable <= ~(audioPeriods[currFrame] == 0);
             synthPeriod <= audioPeriods[currFrame];
@@ -49,7 +49,7 @@ module AudioPlayer(
       end
    end
 
-   wire sampleTrigger;
+   wire tickSynth;
    GenericCounter #(
       .COUNTER_WIDTH(7),
       .COUNTER_MAX(7'b1111111)
@@ -57,14 +57,14 @@ module AudioPlayer(
       .CLK(CLK),
       .RESET(1'b0),
       .ENABLE_IN(1'b1),
-      .TRIG_OUT(sampleTrigger)
+      .TRIG_OUT(tickSynth)
    );
 
    SquareSynth synth(
-      .HALF_PERIOD(synthPeriod),
-      .ENABLE(synthEnable),
       .CLK(CLK),
-      .SAMPLE_TRIGGER(sampleTrigger),
+      .ENABLE(synthEnable),
+      .TICK(tickSynth),
+      .HALF_PERIOD(synthPeriod),
       .AUDIO(AUDIO)
    );
 endmodule
