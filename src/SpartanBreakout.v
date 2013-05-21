@@ -5,6 +5,6 @@ module SpartanBreakout(
     output AUDIO_OUT
 	 );
 
-	//AudioPlayer player(.CLK(CLK_50M), .AUDIO(AUDIO_OUT));
+	AudioPlayer player(.CLK(CLK_50M), .AUDIO(AUDIO_OUT));
 
 endmodule
