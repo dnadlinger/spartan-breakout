@@ -4,11 +4,11 @@
 ///
 /// Generates a square wave in AUDIO with a period of 2 * HALF_PERIOD ticks.
 /// The internal timer is advanced by a tick every clock cycle where
-/// (ENABLE && TICK) is true. If ENABLE is false, internal state and output
-/// are reset.
+/// (ENABLE && ADVANCE_TICK) is true. If ENABLE is false, internal state and
+/// output are reset.
 module SquareSynth(
    input CLK,
-   input TICK,
+   input ADVANCE_TICK,
    input ENABLE,
    input[15:0] HALF_PERIOD,
    output reg AUDIO
@@ -25,7 +25,7 @@ module SquareSynth(
 
    always@(posedge CLK) begin
       if (ENABLE) begin
-         if (TICK) begin
+         if (ADVANCE_TICK) begin
             if (tick == currHalfPeriod) begin
                AUDIO <= ~AUDIO;
                currHalfPeriod <= HALF_PERIOD;

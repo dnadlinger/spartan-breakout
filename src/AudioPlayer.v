@@ -63,7 +63,7 @@ module AudioPlayer(
    SquareSynth synth(
       .CLK(CLK),
       .ENABLE(synthEnable),
-      .TICK(tickSynth),
+      .ADVANCE_TICK(tickSynth),
       .HALF_PERIOD(synthPeriod),
       .AUDIO(AUDIO)
    );
