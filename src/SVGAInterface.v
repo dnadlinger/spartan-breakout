@@ -37,7 +37,7 @@ module SVGAInterface(
 
    GenericCounter #(
       .COUNTER_WIDTH(11),
-      .COUNTER_MAX(lineEndPixel)
+      .COUNTER_MAX(lineEndPixel - 1)
    ) xPixelCounter (
       .CLK(CLK),
       .RESET(1'b0),
@@ -48,7 +48,7 @@ module SVGAInterface(
 
    GenericCounter #(
       .COUNTER_WIDTH(10),
-      .COUNTER_MAX(frameEndLine)
+      .COUNTER_MAX(frameEndLine - 1)
    ) yLineCounter (
       .CLK(CLK),
       .RESET(1'b0),
