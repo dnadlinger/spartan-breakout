@@ -28,7 +28,7 @@ module SpartanBreakoutTest;
 
       // 40 MHz clock.
       forever begin
-         #25;
+         #12.5;
          CLK_40M = ~CLK_40M;
       end
    end
