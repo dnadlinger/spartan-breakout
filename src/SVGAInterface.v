@@ -17,6 +17,7 @@ module SVGAInterface(
    output [10:0] X_PIXEL,
    output [9:0] Y_PIXEL,
    output FRAME_START,
+   output LINE_START,
    output reg [7:0] COLOR_OUT,
    output reg HSYNC,
    output reg VSYNC
@@ -34,7 +35,6 @@ module SVGAInterface(
    parameter vsyncEndLine = 10'd605;
    parameter frameEndLine = 10'd628;
 
-   wire lineBegin;
    GenericCounter #(
       .COUNTER_WIDTH(11),
       .COUNTER_MAX(lineEndPixel)
@@ -42,7 +42,7 @@ module SVGAInterface(
       .CLK(CLK),
       .RESET(1'b0),
       .ENABLE_IN(1'b1),
-      .TRIG_OUT(lineBegin),
+      .TRIG_OUT(LINE_START),
       .COUNT(X_PIXEL)
    );
 
@@ -52,7 +52,7 @@ module SVGAInterface(
    ) yLineCounter (
       .CLK(CLK),
       .RESET(1'b0),
-      .ENABLE_IN(lineBegin),
+      .ENABLE_IN(LINE_START),
       .TRIG_OUT(FRAME_START),
       .COUNT(Y_PIXEL)
    );
