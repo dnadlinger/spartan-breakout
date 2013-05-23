@@ -35,6 +35,7 @@ module SVGAInterface(
    parameter vsyncEndLine = 10'd605;
    parameter frameEndLine = 10'd628;
 
+   // Counter for the x coordinate.
    GenericCounter #(
       .COUNTER_WIDTH(11),
       .COUNTER_MAX(lineEndPixel - 1)
@@ -46,13 +47,16 @@ module SVGAInterface(
       .COUNT(X_PIXEL)
    );
 
+   // Counter for the y coordinate. Note that we want it to flip when
+   // X_PIXEL == 0, so we need to not on LINE_START, but one frame
+   // before that.
    GenericCounter #(
       .COUNTER_WIDTH(10),
       .COUNTER_MAX(frameEndLine - 1)
    ) yLineCounter (
       .CLK(CLK),
       .RESET(1'b0),
-      .ENABLE_IN(LINE_START),
+      .ENABLE_IN(X_PIXEL == lineEndPixel - 1),
       .TRIG_OUT(FRAME_START),
       .COUNT(Y_PIXEL)
    );
