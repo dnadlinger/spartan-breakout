@@ -11,8 +11,8 @@ module AudioPlayer(
    reg [15:0] audioPeriods[0:audioFrameCount - 1];
    reg [9:0] audioDurs[0:audioFrameCount - 1];
    initial begin
-      $readmemh("audio-periods.dat", audioPeriods, 0, audioFrameCount - 1);
-      $readmemh("audio-durs.dat", audioDurs, 0, audioFrameCount - 1);
+      $readmemh("src/audio-periods.dat", audioPeriods, 0, audioFrameCount - 1);
+      $readmemh("src/audio-durs.dat", audioDurs, 0, audioFrameCount - 1);
    end
 
    wire tickSequencer;

@@ -10,7 +10,7 @@ module GenericCounter(CLK, RESET, ENABLE_IN, TRIG_OUT, COUNT);
    output TRIG_OUT;
    output[COUNTER_WIDTH - 1:0] COUNT;
 
-   reg[COUNTER_WIDTH - 1 : 0] counter;
+   reg[COUNTER_WIDTH - 1 : 0] counter = 0;
    reg trigOut;
 
    always@(posedge CLK) begin
