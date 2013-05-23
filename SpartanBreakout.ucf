@@ -1,5 +1,2 @@
-
-# PlanAhead Generated physical constraints 
-
 NET "AUDIO_OUT" LOC = B5;
-NET "CLK_50M" LOC = B8;
+NET "CLK_40M" LOC = M6;
