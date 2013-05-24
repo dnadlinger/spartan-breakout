@@ -39,9 +39,9 @@ module GameRenderer(
 
    // Draw the game housing.
    wire inHousing =
-      (currYTile == ceilingYTile) |
-      ((currYTile > ceilingYTile) &
-      ((currXTile == leftWallXTile) |
+      (currYTile == ceilingYTile) ||
+      ((currYTile > ceilingYTile) &&
+      ((currXTile == leftWallXTile) ||
       (currXTile == rightWallXTile)));
 
    wire inPaddle =
