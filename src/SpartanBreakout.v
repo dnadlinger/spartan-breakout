@@ -4,6 +4,8 @@ module SpartanBreakout(
    input CLK_40M,
    input BTN_LEFT,
    input BTN_RIGHT,
+   input BTN_A,
+   input BTN_B,
    output [7:0] COLOR,
    output HSYNC,
    output VSYNC,
@@ -23,6 +25,7 @@ module SpartanBreakout(
       .START_UPDATE(frameDone),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
+      .BTN_RELEASE(BTN_A | BTN_B),
       .PADDLE_X_PIXEL(paddleXPixel),
       .BALL_X_PIXEL(ballXPixel),
       .BALL_Y_PIXEL(ballYPixel)

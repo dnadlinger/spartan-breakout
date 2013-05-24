@@ -9,6 +9,7 @@ module GameLogic(
    input START_UPDATE,
    input BTN_LEFT,
    input BTN_RIGHT,
+   input BTN_RELEASE,
    output reg [9:0] PADDLE_X_PIXEL,
    output reg [9:0] BALL_X_PIXEL,
    output reg [9:0] BALL_Y_PIXEL
@@ -25,6 +26,8 @@ module GameLogic(
    parameter paddleSpeed = 10'd1;
    parameter gameBeginXPixel = 10'd8;
    parameter gameEndXPixel = 10'd792;
+   parameter paddleYPixel = 10'd584;
+   parameter ballSizePixel = 10'd8;
 
    // After we got the okay, run the update logic for three clock cycles.
    reg doUpdate = 1'b0;
@@ -63,6 +66,35 @@ module GameLogic(
                end
             end
          end
+      end
+   end
+
+   // Handle ball motion.
+   parameter Ball_waitForRelease = 2'h0;
+   parameter Ball_inGame = 2'h1;
+   parameter Ball_lost = 3'h2;
+   reg [1:0] ballState;
+
+   initial begin
+      ballState <= Ball_waitForRelease;
+   end
+
+   always @(posedge CLK) begin
+      if (doUpdate) begin
+         case (ballState)
+            Ball_waitForRelease: begin
+               if (BTN_RELEASE) begin
+                  ballState <= Ball_inGame;
+                  // Generate velocity based on frame counter.
+               end
+               BALL_X_PIXEL <= PADDLE_X_PIXEL + ((PADDLE_LENGTH_PIXEL - ballSizePixel) / 2);
+               BALL_Y_PIXEL <= (paddleYPixel - ballSizePixel);
+            end
+            default: begin
+               BALL_X_PIXEL <= 10'd395;
+               BALL_Y_PIXEL <= 10'd400;
+            end
+         endcase
       end
    end
 endmodule
