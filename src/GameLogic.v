@@ -75,13 +75,16 @@ module GameLogic(
    reg [12:0] ballVelocityYSubpixel = 12'h0;
 
    wire [12:0] tentativeBallXSubpixel = ballXSubpixel + ballVelocityXSubpixel;
+   wire [9:0] tentativeBallXPixel = tentativeBallXSubpixel[12:3];
    wire [6:0] tentativeBallXTile = tentativeBallXSubpixel[12:6];
    wire [12:0] tentativeBallYSubpixel = ballYSubpixel + ballVelocityYSubpixel;
    wire [6:0] tentativeBallYTile = tentativeBallYSubpixel[12:6];
    wire bounceLeft = tentativeBallXTile == leftWallXTile;
    wire bounceRight = tentativeBallXTile == rightWallXTile;
    wire bounceTop = tentativeBallYTile == ceilingYTile;
-   wire bounceBottom = 1'b0;
+   wire bounceBottom = (tentativeBallYTile == paddleYTile) &&
+      (PADDLE_X_PIXEL - ballSizePixel < tentativeBallXPixel) &&
+      (tentativeBallXPixel < PADDLE_X_PIXEL + paddleLengthPixel);
 
    always @(posedge CLK) begin
       if (doUpdate) begin
