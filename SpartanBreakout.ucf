@@ -13,7 +13,6 @@ NET "COLOR[0]" LOC = C14;
 NET "HSYNC" LOC = J14;
 NET "VSYNC" LOC = K13;
 
-# PlanAhead Generated IO constraints 
 
 NET "COLOR[7]" IOSTANDARD = LVTTL;
 NET "COLOR[6]" IOSTANDARD = LVTTL;
@@ -37,3 +36,8 @@ NET "HSYNC" SLEW = FAST;
 NET "VSYNC" SLEW = FAST;
 NET "HSYNC" DRIVE = 8;
 NET "VSYNC" DRIVE = 8;
+
+# PlanAhead Generated physical constraints 
+
+NET "BTN_LEFT" LOC = A7;
+NET "BTN_RIGHT" LOC = G12;

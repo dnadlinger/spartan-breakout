@@ -16,8 +16,6 @@ module SVGAInterface(
    input [7:0] COLOR_IN,
    output [10:0] X_PIXEL,
    output [9:0] Y_PIXEL,
-   output FRAME_START,
-   output LINE_START,
    output reg [7:0] COLOR_OUT,
    output reg HSYNC,
    output reg VSYNC
@@ -43,13 +41,12 @@ module SVGAInterface(
       .CLK(CLK),
       .RESET(1'b0),
       .ENABLE_IN(1'b1),
-      .TRIG_OUT(LINE_START),
       .COUNT(X_PIXEL)
    );
 
    // Counter for the y coordinate. Note that we want it to flip when
-   // X_PIXEL == 0, so we need to not on LINE_START, but one frame
-   // before that.
+   // X_PIXEL == 0, so we need to enable the counter not on xPixelCounter
+   // overflow, but one frame before that.
    GenericCounter #(
       .COUNTER_WIDTH(10),
       .COUNTER_MAX(frameEndLine - 1)
@@ -57,7 +54,6 @@ module SVGAInterface(
       .CLK(CLK),
       .RESET(1'b0),
       .ENABLE_IN(X_PIXEL == lineEndPixel - 1),
-      .TRIG_OUT(FRAME_START),
       .COUNT(Y_PIXEL)
    );
 

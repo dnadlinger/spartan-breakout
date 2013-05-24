@@ -9,6 +9,7 @@
 module GameRenderer(
    input CLK,
    input [9:0] PADDLE_X_PIXEL,
+   output reg FRAME_DONE,
    output [7:0] COLOR,
    output HSYNC,
    output VSYNC
@@ -53,5 +54,14 @@ module GameRenderer(
 
    always @(inHousing or inPaddle) begin
       currColor[7:0] <= (inHousing | inPaddle) * 8'b11111111;
+   end
+
+   // Synchronously generate the syncing signal for the game logic.
+   always @(posedge CLK) begin
+      if (currXPixel == 10'd0 && currYPixel == 10'd600) begin
+         FRAME_DONE <= 1;
+      end else begin
+         FRAME_DONE <= 0;
+      end
    end
 endmodule
