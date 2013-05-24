@@ -14,5 +14,6 @@ module SpartanBreakout(
       .HSYNC(HSYNC),
       .VSYNC(VSYNC)
    );
-   AudioPlayer player(.CLK(CLK_40M), .AUDIO(AUDIO_OUT));
+
+   AudioPlayer audioPlayer(.CLK(CLK_40M), .AUDIO(AUDIO_OUT));
 endmodule
