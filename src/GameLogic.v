@@ -18,17 +18,11 @@ module GameLogic(
    output [9:0] BALL_Y_PIXEL
    );
 
-   parameter PADDLE_LENGTH_PIXEL = 10'd60;
+   `include "game-geometry.v"
 
    initial begin
       PADDLE_X_PIXEL <= 10'd370;
    end
-
-   parameter paddleSpeed = 10'd1;
-   parameter gameBeginXPixel = 10'd8;
-   parameter gameEndXPixel = 10'd792;
-   parameter paddleYPixel = 10'd584;
-   parameter ballSizePixel = 10'd8;
 
    // After we got the okay, run the update logic for three clock cycles.
    reg doUpdate = 1'b0;
@@ -60,8 +54,8 @@ module GameLogic(
             end
 
             if (BTN_RIGHT) begin
-               if (PADDLE_X_PIXEL > gameEndXPixel - PADDLE_LENGTH_PIXEL - paddleSpeed) begin
-                  PADDLE_X_PIXEL <= gameEndXPixel - PADDLE_LENGTH_PIXEL;
+               if (PADDLE_X_PIXEL > gameEndXPixel - paddleLengthPixel - paddleSpeed) begin
+                  PADDLE_X_PIXEL <= gameEndXPixel - paddleLengthPixel;
                end else begin
                   PADDLE_X_PIXEL <= PADDLE_X_PIXEL + paddleSpeed;
                end
@@ -90,7 +84,7 @@ module GameLogic(
                   ballVelocityXSubpixel <= {9'd0, 3'd1};
                   ballVelocityYSubpixel <= -{9'd1, 3'd0};
                end
-               ballXSubpixel <= {PADDLE_X_PIXEL + ((PADDLE_LENGTH_PIXEL - ballSizePixel) / 2), 3'd0};
+               ballXSubpixel <= {PADDLE_X_PIXEL + ((paddleLengthPixel - ballSizePixel) / 2), 3'd0};
                ballYSubpixel <= {(paddleYPixel - ballSizePixel), 3'd0};
             end
             Ball_inGame: begin

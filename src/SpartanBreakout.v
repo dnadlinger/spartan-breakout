@@ -12,15 +12,11 @@ module SpartanBreakout(
    output AUDIO_OUT
    );
 
-   parameter paddleLengthPixel = 10'd60;
-
    wire frameDone;
    wire [9:0] paddleXPixel;
    wire [9:0] ballXPixel;
    wire [9:0] ballYPixel;
-   GameLogic #(
-      .PADDLE_LENGTH_PIXEL(paddleLengthPixel)
-   ) logic(
+   GameLogic logic(
       .CLK(CLK_40M),
       .START_UPDATE(frameDone),
       .BTN_LEFT(BTN_LEFT),
@@ -31,9 +27,7 @@ module SpartanBreakout(
       .BALL_Y_PIXEL(ballYPixel)
    );
 
-   GameRenderer #(
-      .PADDLE_LENGTH_PIXEL(paddleLengthPixel)
-   ) renderer(
+   GameRenderer renderer(
       .CLK(CLK_40M),
       .PADDLE_X_PIXEL(paddleXPixel),
       .BALL_X_PIXEL(ballXPixel),

@@ -17,8 +17,7 @@ module GameRenderer(
    output VSYNC
    );
 
-   parameter PADDLE_LENGTH_PIXEL = 10'd60;
-   parameter ballSizePixel = 8;
+   `include "game-geometry.v"
 
    // The whole logic is driven by the SVGA interface.
    wire [9:0] currXPixel;
@@ -39,11 +38,6 @@ module GameRenderer(
    wire [6:0] currYTile = currYPixel[9:3];
 
    // Draw the game housing.
-   parameter ceilingYTile = 7'd9;
-   parameter leftWallXTile = 7'd0;
-   parameter rightWallXTile = 7'd99;
-   parameter paddleYTile = 7'd73;
-
    wire inHousing =
       (currYTile == ceilingYTile) |
       ((currYTile > ceilingYTile) &
@@ -53,7 +47,7 @@ module GameRenderer(
    wire inPaddle =
       currYTile == paddleYTile &&
       PADDLE_X_PIXEL <= currXPixel &&
-      currXPixel < PADDLE_X_PIXEL + PADDLE_LENGTH_PIXEL;
+      currXPixel < PADDLE_X_PIXEL + paddleLengthPixel;
 
    wire inBall =
       BALL_X_PIXEL <= currXPixel &&
