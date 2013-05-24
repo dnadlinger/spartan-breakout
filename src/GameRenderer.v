@@ -63,7 +63,8 @@ module GameRenderer(
 
    wire [6:0] blockXTile = currXTile - blockStartXTile;
    wire [3:0] blockCol = blockXTile[6:3];
-   wire [6:0] blockRow = currYTile - blockStartYTile;
+   wire [6:0] blockYTile = currYTile - blockStartYTile;
+   wire [5:0] blockRow = blockYTile[6:1];
    wire inBlock =
       blockCol < blockColCount &&
       blockRow < blockRowCount &&
