@@ -74,6 +74,15 @@ module GameLogic(
    reg [12:0] ballVelocityXSubpixel = 12'h0;
    reg [12:0] ballVelocityYSubpixel = 12'h0;
 
+   wire [12:0] tentativeBallXSubpixel = ballXSubpixel + ballVelocityXSubpixel;
+   wire [6:0] tentativeBallXTile = tentativeBallXSubpixel[12:6];
+   wire [12:0] tentativeBallYSubpixel = ballYSubpixel + ballVelocityYSubpixel;
+   wire [6:0] tentativeBallYTile = tentativeBallYSubpixel[12:6];
+   wire bounceLeft = tentativeBallXTile == leftWallXTile;
+   wire bounceRight = tentativeBallXTile == rightWallXTile;
+   wire bounceTop = tentativeBallYTile == ceilingYTile;
+   wire bounceBottom = 1'b0;
+
    always @(posedge CLK) begin
       if (doUpdate) begin
          case (ballState)
@@ -88,8 +97,22 @@ module GameLogic(
                ballYSubpixel <= {(paddleYPixel - ballSizePixel), 3'd0};
             end
             Ball_inGame: begin
-               ballXSubpixel <= ballXSubpixel + ballVelocityXSubpixel;
-               ballYSubpixel <= ballYSubpixel + ballVelocityYSubpixel;
+               if (!(bounceLeft && bounceRight)) begin
+                  if (bounceLeft || bounceRight) begin
+                     ballVelocityXSubpixel <= -ballVelocityXSubpixel;
+                     ballXSubpixel <= ballXSubpixel - ballVelocityXSubpixel;
+                  end else begin
+                     ballXSubpixel <= ballXSubpixel + ballVelocityXSubpixel;
+                  end
+               end
+               if (!(bounceTop && bounceBottom)) begin
+                  if (bounceTop || bounceBottom) begin
+                     ballVelocityYSubpixel <= -ballVelocityYSubpixel;
+                     ballYSubpixel <= ballYSubpixel - ballVelocityYSubpixel;
+                  end else begin
+                     ballYSubpixel <= ballYSubpixel + ballVelocityYSubpixel;
+                  end
+               end
             end
             default: begin
                ballXSubpixel <= {10'd395, 3'd0};
