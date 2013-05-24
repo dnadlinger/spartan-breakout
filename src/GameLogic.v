@@ -17,9 +17,9 @@ module GameLogic(
    parameter PADDLE_LENGTH_PIXEL = 10'd60;
 
    initial begin
-       PADDLE_X_PIXEL <= 10'd370;
-       BALL_X_PIXEL <= 10'd395;
-       BALL_Y_PIXEL = 10'd400;
+      PADDLE_X_PIXEL <= 10'd370;
+      BALL_X_PIXEL <= 10'd395;
+      BALL_Y_PIXEL = 10'd400;
    end
 
    parameter paddleSpeed = 10'd1;
