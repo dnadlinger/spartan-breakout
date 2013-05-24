@@ -4,6 +4,9 @@
 ///
 /// To be able to use a simple collision detection approach, the logic
 /// internally runs in three steps, i.e. effectively at 180 Hz.
+///
+/// The ball position is internally handled with 3 bits of extra subpixel
+/// position to be able to handle lower velocities smoothly.
 module GameLogic(
    input CLK,
    input START_UPDATE,
@@ -11,16 +14,14 @@ module GameLogic(
    input BTN_RIGHT,
    input BTN_RELEASE,
    output reg [9:0] PADDLE_X_PIXEL,
-   output reg [9:0] BALL_X_PIXEL,
-   output reg [9:0] BALL_Y_PIXEL
+   output [9:0] BALL_X_PIXEL,
+   output [9:0] BALL_Y_PIXEL
    );
 
    parameter PADDLE_LENGTH_PIXEL = 10'd60;
 
    initial begin
       PADDLE_X_PIXEL <= 10'd370;
-      BALL_X_PIXEL <= 10'd395;
-      BALL_Y_PIXEL = 10'd400;
    end
 
    parameter paddleSpeed = 10'd1;
@@ -73,11 +74,9 @@ module GameLogic(
    parameter Ball_waitForRelease = 2'h0;
    parameter Ball_inGame = 2'h1;
    parameter Ball_lost = 3'h2;
-   reg [1:0] ballState;
-
-   initial begin
-      ballState <= Ball_waitForRelease;
-   end
+   reg [1:0] ballState = Ball_waitForRelease;
+   reg [12:0] ballXSubpixel = {10'd395, 3'h0};
+   reg [12:0] ballYSubpixel = {10'd400, 3'h0};
 
    always @(posedge CLK) begin
       if (doUpdate) begin
@@ -87,14 +86,17 @@ module GameLogic(
                   ballState <= Ball_inGame;
                   // Generate velocity based on frame counter.
                end
-               BALL_X_PIXEL <= PADDLE_X_PIXEL + ((PADDLE_LENGTH_PIXEL - ballSizePixel) / 2);
-               BALL_Y_PIXEL <= (paddleYPixel - ballSizePixel);
+               ballXSubpixel <= {PADDLE_X_PIXEL + ((PADDLE_LENGTH_PIXEL - ballSizePixel) / 2), 3'h0};
+               ballYSubpixel <= {(paddleYPixel - ballSizePixel), 3'h0};
             end
             default: begin
-               BALL_X_PIXEL <= 10'd395;
-               BALL_Y_PIXEL <= 10'd400;
+               ballXSubpixel <= {10'd395, 3'h0};
+               ballYSubpixel <= {10'd400, 3'h0};
             end
          endcase
       end
    end
+
+   assign BALL_X_PIXEL = ballXSubpixel[12:3];
+   assign BALL_Y_PIXEL = ballYSubpixel[12:3];
 endmodule
