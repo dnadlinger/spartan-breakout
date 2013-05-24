@@ -9,13 +9,17 @@ module GameLogic(
    input START_UPDATE,
    input BTN_LEFT,
    input BTN_RIGHT,
-   output reg [9:0] PADDLE_X_PIXEL
+   output reg [9:0] PADDLE_X_PIXEL,
+   output reg [9:0] BALL_X_PIXEL,
+   output reg [9:0] BALL_Y_PIXEL
    );
 
    parameter PADDLE_LENGTH_PIXEL = 10'd60;
 
    initial begin
        PADDLE_X_PIXEL <= 10'd370;
+       BALL_X_PIXEL <= 10'd395;
+       BALL_Y_PIXEL = 10'd400;
    end
 
    parameter paddleSpeed = 10'd1;

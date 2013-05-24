@@ -14,6 +14,8 @@ module SpartanBreakout(
 
    wire frameDone;
    wire [9:0] paddleXPixel;
+   wire [9:0] ballXPixel;
+   wire [9:0] ballYPixel;
    GameLogic #(
       .PADDLE_LENGTH_PIXEL(paddleLengthPixel)
    ) logic(
@@ -21,7 +23,9 @@ module SpartanBreakout(
       .START_UPDATE(frameDone),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
-      .PADDLE_X_PIXEL(paddleXPixel)
+      .PADDLE_X_PIXEL(paddleXPixel),
+      .BALL_X_PIXEL(ballXPixel),
+      .BALL_Y_PIXEL(ballYPixel)
    );
 
    GameRenderer #(
@@ -29,6 +33,8 @@ module SpartanBreakout(
    ) renderer(
       .CLK(CLK_40M),
       .PADDLE_X_PIXEL(paddleXPixel),
+      .BALL_X_PIXEL(ballXPixel),
+      .BALL_Y_PIXEL(ballYPixel),
       .FRAME_DONE(frameDone),
       .COLOR(COLOR),
       .HSYNC(HSYNC),

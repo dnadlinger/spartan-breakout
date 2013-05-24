@@ -9,6 +9,8 @@
 module GameRenderer(
    input CLK,
    input [9:0] PADDLE_X_PIXEL,
+   input [9:0] BALL_X_PIXEL,
+   input [9:0] BALL_Y_PIXEL,
    output reg FRAME_DONE,
    output [7:0] COLOR,
    output HSYNC,
@@ -16,6 +18,7 @@ module GameRenderer(
    );
 
    parameter PADDLE_LENGTH_PIXEL = 10'd60;
+   parameter ballSizePixel = 8;
 
    // The whole logic is driven by the SVGA interface.
    wire [9:0] currXPixel;
@@ -52,8 +55,14 @@ module GameRenderer(
       PADDLE_X_PIXEL <= currXPixel &&
       currXPixel < PADDLE_X_PIXEL + PADDLE_LENGTH_PIXEL;
 
+   wire inBall =
+      BALL_X_PIXEL <= currXPixel &&
+      BALL_Y_PIXEL <= currYPixel &&
+      currXPixel < BALL_X_PIXEL + ballSizePixel &&
+      currYPixel < BALL_Y_PIXEL + ballSizePixel;
+
    always @(inHousing or inPaddle) begin
-      currColor[7:0] <= (inHousing | inPaddle) * 8'b11111111;
+      currColor[7:0] <= (inHousing | inPaddle | inBall) * 8'b11111111;
    end
 
    // Synchronously generate the syncing signal for the game logic.
