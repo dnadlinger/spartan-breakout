@@ -8,10 +8,13 @@
 /// There are two fundamental units: Raw pixels, and 10 px by 10 px "blocks".
 module GameRenderer(
    input CLK,
+   input [9:0] PADDLE_X_PIXEL,
    output [7:0] COLOR,
    output HSYNC,
    output VSYNC
    );
+
+   parameter PADDLE_LENGTH_PIXEL = 10'd60;
 
    // The whole logic is driven by the SVGA interface.
    wire lineStart;
@@ -81,6 +84,7 @@ module GameRenderer(
    parameter ceilingPosBlock = 6'd7;
    parameter leftWallPosBlock = 7'd0;
    parameter rightWallPosBlock = 7'd79;
+   parameter paddleYBlock = 6'd58;
 
    wire inHousing =
       (currYBlock == ceilingPosBlock) |
@@ -88,7 +92,12 @@ module GameRenderer(
       ((currXBlock == leftWallPosBlock) |
       (currXBlock == rightWallPosBlock)));
 
+   wire inPaddle =
+      currYBlock == paddleYBlock &&
+      PADDLE_X_PIXEL <= currXPixel &&
+      currXPixel < PADDLE_X_PIXEL + PADDLE_LENGTH_PIXEL;
+
    always @(currXPixel or currYPixel or currXBlock or currYBlock) begin
-      currColor[7:0] <= inHousing * 8'b11111111;
+      currColor[7:0] <= (inHousing | inPaddle) * 8'b11111111;
    end
 endmodule
