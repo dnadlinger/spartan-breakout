@@ -7,6 +7,9 @@
 ///
 /// The ball position is internally handled with 3 bits of extra subpixel
 /// position to be able to handle lower velocities smoothly.
+///
+/// All position reference points (as well as the coordinate origin itself) are
+/// in the top left corner of the respective object.
 module GameLogic(
    input CLK,
    input START_UPDATE,
