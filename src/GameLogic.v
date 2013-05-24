@@ -80,7 +80,7 @@ module GameLogic(
    wire [12:0] tentativeBallYSubpixel = ballYSubpixel + ballVelocityYSubpixel;
    wire [6:0] tentativeBallYTile = tentativeBallYSubpixel[12:6];
    wire bounceLeft = tentativeBallXTile == leftWallXTile;
-   wire bounceRight = tentativeBallXTile == rightWallXTile;
+   wire bounceRight = tentativeBallXTile == rightWallXTile - 7'd1;
    wire bounceTop = tentativeBallYTile == ceilingYTile;
    wire bounceBottom = (tentativeBallYTile == paddleYTile) &&
       (PADDLE_X_PIXEL - ballSizePixel < tentativeBallXPixel) &&
