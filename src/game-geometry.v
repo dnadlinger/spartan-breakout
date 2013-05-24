@@ -10,7 +10,7 @@ parameter gameEndXPixel = 10'd784;
 
 // Blocks.
 parameter blockStartXTile = 7'd2;
-parameter blockStartYTile = 7'd15;
+parameter blockStartYTile = 7'd17;
 parameter blockRowCount = 3'd6;
 parameter blockColCount = 4'd12;
 
