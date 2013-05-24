@@ -61,7 +61,7 @@ module GameRenderer(
       currXPixel < BALL_X_PIXEL + ballSizePixel &&
       currYPixel < BALL_Y_PIXEL + ballSizePixel;
 
-   always @(inHousing or inPaddle) begin
+   always @(inHousing or inPaddle or inBall) begin
       currColor[7:0] <= (inHousing | inPaddle | inBall) * 8'b11111111;
    end
 
