@@ -77,6 +77,8 @@ module GameLogic(
    reg [1:0] ballState = Ball_waitForRelease;
    reg [12:0] ballXSubpixel = {10'd395, 3'h0};
    reg [12:0] ballYSubpixel = {10'd400, 3'h0};
+   reg [12:0] ballVelocityXSubpixel = 12'h0;
+   reg [12:0] ballVelocityYSubpixel = 12'h0;
 
    always @(posedge CLK) begin
       if (doUpdate) begin
@@ -84,14 +86,20 @@ module GameLogic(
             Ball_waitForRelease: begin
                if (BTN_RELEASE) begin
                   ballState <= Ball_inGame;
-                  // Generate velocity based on frame counter.
+                  // TODO: Generate velocity based on frame counter.
+                  ballVelocityXSubpixel <= {9'd0, 3'd1};
+                  ballVelocityYSubpixel <= -{9'd1, 3'd0};
                end
-               ballXSubpixel <= {PADDLE_X_PIXEL + ((PADDLE_LENGTH_PIXEL - ballSizePixel) / 2), 3'h0};
-               ballYSubpixel <= {(paddleYPixel - ballSizePixel), 3'h0};
+               ballXSubpixel <= {PADDLE_X_PIXEL + ((PADDLE_LENGTH_PIXEL - ballSizePixel) / 2), 3'd0};
+               ballYSubpixel <= {(paddleYPixel - ballSizePixel), 3'd0};
+            end
+            Ball_inGame: begin
+               ballXSubpixel <= ballXSubpixel + ballVelocityXSubpixel;
+               ballYSubpixel <= ballYSubpixel + ballVelocityYSubpixel;
             end
             default: begin
-               ballXSubpixel <= {10'd395, 3'h0};
-               ballYSubpixel <= {10'd400, 3'h0};
+               ballXSubpixel <= {10'd395, 3'd0};
+               ballYSubpixel <= {10'd400, 3'd0};
             end
          endcase
       end
