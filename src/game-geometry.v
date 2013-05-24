@@ -3,10 +3,10 @@
 
 // Game area housing.
 parameter ceilingYTile = 7'd9;
-parameter leftWallXTile = 7'd0;
-parameter rightWallXTile = 7'd99;
-parameter gameBeginXPixel = 10'd8;
-parameter gameEndXPixel = 10'd792;
+parameter leftWallXTile = 7'd1;
+parameter rightWallXTile = 7'd98;
+parameter gameBeginXPixel = 10'd16;
+parameter gameEndXPixel = 10'd784;
 
 // Player paddle.
 parameter paddleLengthPixel = 10'd60;
