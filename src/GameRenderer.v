@@ -97,7 +97,7 @@ module GameRenderer(
       PADDLE_X_PIXEL <= currXPixel &&
       currXPixel < PADDLE_X_PIXEL + PADDLE_LENGTH_PIXEL;
 
-   always @(currXPixel or currYPixel or currXBlock or currYBlock) begin
+   always @(inHousing or inPaddle) begin
       currColor[7:0] <= (inHousing | inPaddle) * 8'b11111111;
    end
 endmodule
