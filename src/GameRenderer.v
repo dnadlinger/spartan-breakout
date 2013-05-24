@@ -11,6 +11,7 @@ module GameRenderer(
    input [9:0] PADDLE_X_PIXEL,
    input [9:0] BALL_X_PIXEL,
    input [9:0] BALL_Y_PIXEL,
+   input [71:0] BLOCK_STATE,
    output reg FRAME_DONE,
    output [7:0] COLOR,
    output HSYNC,
@@ -60,8 +61,31 @@ module GameRenderer(
       currXPixel < BALL_X_PIXEL + ballSizePixel &&
       currYPixel < BALL_Y_PIXEL + ballSizePixel;
 
+   wire [6:0] blockXTile = currXTile - blockStartXTile;
+   wire [3:0] blockCol = blockXTile[6:3];
+   wire [6:0] blockRow = currYTile - blockStartYTile;
+   wire inBlock =
+      blockCol < blockColCount &&
+      blockRow < blockRowCount &&
+      BLOCK_STATE[(blockRow[2:0] * blockColCount) + blockCol];
+
+   reg[7:0] blockColor;
+   always @(blockRow) begin
+      case (blockRow)
+         6'd0: blockColor <= 8'b00000111;
+         6'd1: blockColor <= 8'b00011110;
+         6'd2: blockColor <= 8'b00111111;
+         6'd3: blockColor <= 8'b00110000;
+         6'd4: blockColor <= 8'b11010000;
+         6'd5: blockColor <= 8'b10000011;
+         default: blockColor <= 8'b0;
+      endcase
+   end
+
    always @(inHousing or inPaddle or inBall) begin
-      currColor[7:0] <= (inHousing | inPaddle | inBall) * 8'b11111111;
+      currColor[7:0] <=
+         ((inHousing | inPaddle | inBall) * 8'b11111111) |
+         (inBlock * blockColor);
    end
 
    // Synchronously generate the syncing signal for the game logic.

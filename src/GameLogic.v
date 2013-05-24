@@ -18,13 +18,15 @@ module GameLogic(
    input BTN_RELEASE,
    output reg [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
-   output [9:0] BALL_Y_PIXEL
+   output [9:0] BALL_Y_PIXEL,
+   output reg [71:0] BLOCK_STATE
    );
 
    `include "game-geometry.v"
 
    initial begin
       PADDLE_X_PIXEL <= 10'd370;
+      BLOCK_STATE <= 72'b111111111111010101010101101010101010010101010101101010101010111111111111;
    end
 
    // After we got the okay, run the update logic for three clock cycles.

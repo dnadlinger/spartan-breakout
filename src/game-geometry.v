@@ -8,10 +8,17 @@ parameter rightWallXTile = 7'd98;
 parameter gameBeginXPixel = 10'd16;
 parameter gameEndXPixel = 10'd784;
 
+// Blocks.
+parameter blockStartXTile = 7'd2;
+parameter blockStartYTile = 7'd15;
+parameter blockRowCount = 3'd6;
+parameter blockColCount = 4'd12;
+
 // Player paddle.
 parameter paddleLengthPixel = 10'd60;
 parameter paddleYTile = 7'd73;
 parameter paddleYPixel = paddleYTile * 10'd8;
 parameter paddleSpeed = 10'd1;
 
+// Ball.
 parameter ballSizePixel = 10'd8;
