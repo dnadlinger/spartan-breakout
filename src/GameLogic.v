@@ -16,7 +16,7 @@ module GameLogic(
    input BTN_LEFT,
    input BTN_RIGHT,
    input BTN_RELEASE,
-   output reg [9:0] PADDLE_X_PIXEL,
+   output [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
    output [9:0] BALL_Y_PIXEL,
    output reg [71:0] BLOCK_STATE
@@ -25,111 +25,121 @@ module GameLogic(
    `include "game-geometry.v"
 
    initial begin
-      PADDLE_X_PIXEL <= 10'd370;
       BLOCK_STATE <= 72'b111111111111010101010101101010101010010101010101101010101010111111111111;
    end
 
-   // After we got the okay, run the update logic for 12 clock cycles.
-   reg doUpdate = 1'b0;
-   reg [3:0] updateCounter = 4'd0;
+   // Physics simulation works in three phases:
+   parameter PhysPhase_extrapolate = 2'd0;
+   parameter PhysPhase_collide = 2'd1;
+   parameter PhysPhase_update = 2'd2;
+   reg [1:0] physPhase = PhysPhase_extrapolate;
 
-   always @(posedge CLK) begin
-      if (doUpdate) begin
-         if (updateCounter == 4'd11) begin
-            doUpdate <= 1'b0;
-            updateCounter <= 4'd0;
-         end else begin
-            updateCounter <= updateCounter + 4'd1;
-         end
-      end else if (START_UPDATE) begin
-         doUpdate <= 1'b1;
-      end
-   end
+   // Number of timesteps already done this frame.
+   reg [3:0] timestepCount = 4'd0;
 
-   // Handle button input.
-   always @(posedge CLK) begin
-      if (doUpdate) begin
-         if (!(BTN_LEFT && BTN_RIGHT)) begin
-            if (BTN_LEFT) begin
-               if (PADDLE_X_PIXEL < gameBeginXPixel + paddleSpeed) begin
-                  PADDLE_X_PIXEL <= gameBeginXPixel;
-               end else begin
-                  PADDLE_X_PIXEL <= PADDLE_X_PIXEL - paddleSpeed;
-               end
-            end
-
-            if (BTN_RIGHT) begin
-               if (PADDLE_X_PIXEL > gameEndXPixel - paddleLengthPixel - paddleSpeed) begin
-                  PADDLE_X_PIXEL <= gameEndXPixel - paddleLengthPixel;
-               end else begin
-                  PADDLE_X_PIXEL <= PADDLE_X_PIXEL + paddleSpeed;
-               end
-            end
-         end
-      end
-   end
-
-   // Handle ball motion.
    parameter Ball_waitForRelease = 2'h0;
    parameter Ball_inGame = 2'h1;
    parameter Ball_lost = 3'h2;
    reg [1:0] ballState = Ball_waitForRelease;
-   reg [15:0] ballXSubpixel = {10'd395, 6'h0};
-   reg [15:0] ballYSubpixel = {10'd400, 6'h0};
-   reg [15:0] ballVelocityXSubpixel = 15'h0;
-   reg [15:0] ballVelocityYSubpixel = 15'h0;
+   reg [15:0] ballX = {10'd395, 6'h0};
+   reg [15:0] ballY = {10'd400, 6'h0};
+   reg [15:0] ballVelocityX = 16'h0;
+   reg [15:0] ballVelocityY = 16'h0;
+   reg [15:0] paddleX = {10'd370, 6'd0};
 
-   wire [15:0] tentativeBallXSubpixel = ballXSubpixel + ballVelocityXSubpixel;
-   wire [9:0] tentativeBallXPixel = tentativeBallXSubpixel[15:6];
-   wire [6:0] tentativeBallXTile = tentativeBallXSubpixel[15:9];
-   wire [15:0] tentativeBallYSubpixel = ballYSubpixel + ballVelocityYSubpixel;
-   wire [6:0] tentativeBallYTile = tentativeBallYSubpixel[15:9];
-   wire bounceLeft = tentativeBallXTile == leftWallXTile;
-   wire bounceRight = tentativeBallXTile == rightWallXTile - 7'd1;
-   wire bounceTop = tentativeBallYTile == ceilingYTile;
-   wire bounceBottom = (tentativeBallYTile == paddleYTile) &&
-      (PADDLE_X_PIXEL - ballSizePixel < tentativeBallXPixel) &&
-      (tentativeBallXPixel < PADDLE_X_PIXEL + paddleLengthPixel);
+   reg [15:0] newBallX;
+   wire [6:0] newBallXTile = newBallX[15:9];
+   wire ballAtTileX = newBallX[8:6] == 3'd0;
+
+   reg [15:0] newBallY;
+   wire [6:0] newBallYTile = newBallY[15:9];
+   wire ballAtTileY = newBallY[8:6] == 3'd0;
+
+   reg [15:0] newPaddleX;
+
+   wire bounceLeft = newBallXTile == leftWallXTile;
+   wire bounceRight = newBallXTile == rightWallXTile - 7'd1;
+   wire bounceTop = newBallYTile == ceilingYTile + 7'd1;
+   wire bounceBottom = (newBallYTile == paddleYTile - 1) &&
+      (PADDLE_X_PIXEL - ballSizePixel < newBallX[15:6]) &&
+      (newBallX[15:6] < PADDLE_X_PIXEL + paddleLengthPixel);
 
    always @(posedge CLK) begin
-      if (doUpdate) begin
-         case (ballState)
-            Ball_waitForRelease: begin
-               if (BTN_RELEASE) begin
-                  ballState <= Ball_inGame;
-                  // TODO: Generate velocity based on frame counter.
-                  ballVelocityXSubpixel <= {10'd0, 6'd1};
-                  ballVelocityYSubpixel <= -{10'd0, 6'd4};
+      case (physPhase)
+         PhysPhase_extrapolate: begin
+            newBallX <= ballX + ballVelocityX;
+            newBallY <= ballY + ballVelocityY;
+
+            newPaddleX <= paddleX -
+               BTN_LEFT * paddleSpeedSubpixel +
+               BTN_RIGHT * paddleSpeedSubpixel;
+
+            // Advance phase.
+            if (timestepCount == 4'd11) begin
+               if (START_UPDATE) begin
+                  timestepCount <= 4'd0;
+                  physPhase <= PhysPhase_collide;
+               end else begin
+                  physPhase <= PhysPhase_extrapolate;
                end
-               ballXSubpixel <= {PADDLE_X_PIXEL + ((paddleLengthPixel - ballSizePixel) / 2), 6'd0};
-               ballYSubpixel <= {(paddleYPixel - ballSizePixel), 6'd0};
+            end else begin
+               timestepCount <= timestepCount + 4'd1;
+               physPhase <= PhysPhase_collide;
             end
-            Ball_inGame: begin
-               if (!(bounceLeft && bounceRight)) begin
-                  if (bounceLeft || bounceRight) begin
-                     ballVelocityXSubpixel <= -ballVelocityXSubpixel;
-                     ballXSubpixel <= ballXSubpixel - ballVelocityXSubpixel;
-                  end else begin
-                     ballXSubpixel <= ballXSubpixel + ballVelocityXSubpixel;
+         end
+         PhysPhase_collide: begin
+            if (newPaddleX[15:6] == gameBeginXPixel - 1) begin
+               newPaddleX <= {gameBeginXPixel, 6'd0};
+               // SOUND: Hit wall.
+            end
+
+            if (newPaddleX[15:6] == gameEndXPixel - paddleLengthPixel + 1) begin
+               newPaddleX <= {gameEndXPixel - paddleLengthPixel, 6'd0};
+               // SOUND: Hit wall.
+            end
+
+            if (ballAtTileX && (bounceLeft || bounceRight)) begin
+               ballVelocityX <= -ballVelocityX;
+            end
+
+            if (ballAtTileY && (bounceTop || bounceBottom)) begin
+               ballVelocityY <= -ballVelocityY;
+            end
+
+            // Advance phase.
+            physPhase <= PhysPhase_update;
+         end
+         PhysPhase_update: begin
+            paddleX <= newPaddleX;
+
+            case (ballState)
+               Ball_waitForRelease: begin
+                  if (BTN_RELEASE) begin
+                     ballState <= Ball_inGame;
+                     // TODO: Generate velocity based on frame counter.
+                     ballVelocityX <= {10'd0, 6'd2};
+                     ballVelocityY <= -{10'd0, 6'd8};
                   end
+                  ballX <= {PADDLE_X_PIXEL + ((paddleLengthPixel - ballSizePixel) / 2), 6'd0};
+                  ballY <= {(paddleYPixel - ballSizePixel), 6'd0};
                end
-               if (!(bounceTop && bounceBottom)) begin
-                  if (bounceTop || bounceBottom) begin
-                     ballVelocityYSubpixel <= -ballVelocityYSubpixel;
-                     ballYSubpixel <= ballYSubpixel - ballVelocityYSubpixel;
-                  end else begin
-                     ballYSubpixel <= ballYSubpixel + ballVelocityYSubpixel;
-                  end
+               Ball_inGame: begin
+                  ballX <= ballX + ballVelocityX;
+                  ballY <= ballY + ballVelocityY;
                end
-            end
-            default: begin
-               ballXSubpixel <= {10'd395, 3'd0};
-               ballYSubpixel <= {10'd400, 3'd0};
-            end
-         endcase
-      end
+               default: begin // Unused.
+                  ballX <= {10'd395, 6'd0};
+                  ballY <= {10'd400, 6'd0};
+               end
+            endcase
+
+            // Advance phase.
+            physPhase <= PhysPhase_extrapolate;
+         end
+      endcase
    end
 
-   assign BALL_X_PIXEL = ballXSubpixel[15:6];
-   assign BALL_Y_PIXEL = ballYSubpixel[15:6];
+   assign BALL_X_PIXEL = ballX[15:6];
+   assign BALL_Y_PIXEL = ballY[15:6];
+   assign PADDLE_X_PIXEL = paddleX[15:6];
 endmodule
