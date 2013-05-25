@@ -6,6 +6,7 @@ module SpartanBreakout(
    input BTN_RIGHT,
    input BTN_A,
    input BTN_B,
+   input SW_PAUSE,
    output [7:0] COLOR,
    output HSYNC,
    output VSYNC,
@@ -19,7 +20,7 @@ module SpartanBreakout(
    wire [71:0] blockState;
    GameLogic logic(
       .CLK(CLK_40M),
-      .START_UPDATE(frameDone),
+      .START_UPDATE(frameDone && !SW_PAUSE),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
       .BTN_RELEASE(BTN_A | BTN_B),
