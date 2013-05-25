@@ -38,9 +38,12 @@ NET "HSYNC" DRIVE = 8;
 NET "VSYNC" DRIVE = 8;
 
 # PlanAhead Generated physical constraints 
-
 NET "BTN_LEFT" LOC = A7;
 NET "BTN_RIGHT" LOC = G12;
 NET "BTN_A" LOC = M4;
 NET "BTN_B" LOC = C11;
 NET "SW_PAUSE" LOC = E2;
+
+#Created by Constraints Editor (xc3s250e-cp132-4) - 2013/05/25
+NET "CLK_40M" TNM_NET = CLK_40M;
+TIMESPEC TS_CLK_40M = PERIOD "CLK_40M" 40 MHz HIGH 50%;
