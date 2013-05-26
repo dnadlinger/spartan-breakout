@@ -83,7 +83,7 @@ module GameRenderer(
       endcase
    end
 
-   always @(inHousing or inPaddle or inBall) begin
+   always @(inHousing or inPaddle or inBall or inBlock or blockColor) begin
       currColor[7:0] <=
          ((inHousing | inPaddle | inBall) * 8'b11111111) |
          (inBlock * blockColor);
