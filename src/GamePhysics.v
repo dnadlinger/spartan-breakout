@@ -10,7 +10,7 @@
 ///
 /// All position reference points (as well as the coordinate origin itself) are
 /// in the top left corner of the respective object.
-module GameLogic(
+module GamePhysics(
    input CLK,
    input START_UPDATE,
    input BTN_LEFT,

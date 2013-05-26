@@ -18,12 +18,13 @@ module SpartanBreakout(
    wire [9:0] ballXPixel;
    wire [9:0] ballYPixel;
    wire [71:0] blockState;
-   GameLogic logic(
+   GameController controller(
       .CLK(CLK_40M),
-      .START_UPDATE(frameDone && !SW_PAUSE),
+      .FRAME_RENDERED(frameDone),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
       .BTN_RELEASE(BTN_A | BTN_B),
+      .SW_PAUSE(SW_PAUSE),
       .PADDLE_X_PIXEL(paddleXPixel),
       .BALL_X_PIXEL(ballXPixel),
       .BALL_Y_PIXEL(ballYPixel),
