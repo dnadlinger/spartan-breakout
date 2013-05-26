@@ -64,7 +64,7 @@ module GameLogic(
    wire [6:0] cXBlockOffset = cXTile - blockStartXTile;
    wire [3:0] cXBlock = cXBlockOffset[6:3];
    wire isLeftBlock = cXBlock == 4'd0;
-   wire isRightBlock = cXBlock == blockColCount - 4'd1;
+   wire isRightBlock = cXBlock == blockColCount;
 
    reg [6:0] cYTile;
    wire [6:0] cYBlockOffset = (cYTile - blockStartYTile);
