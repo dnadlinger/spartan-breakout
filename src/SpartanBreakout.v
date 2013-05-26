@@ -6,12 +6,19 @@ module SpartanBreakout(
    input BTN_RIGHT,
    input BTN_A,
    input BTN_B,
+   input SW_RESET,
    input SW_PAUSE,
    output [7:0] COLOR,
    output HSYNC,
    output VSYNC,
    output AUDIO_OUT
    );
+
+   reg initialReset = 1'b1;
+   always @(posedge CLK_40M) begin
+      initialReset <= 1'b0;
+   end
+   wire reset = initialReset | SW_RESET;
 
    wire frameDone;
    wire [9:0] paddleXPixel;
@@ -20,6 +27,7 @@ module SpartanBreakout(
    wire [71:0] blockState;
    GameController controller(
       .CLK(CLK_40M),
+      .RESET(reset),
       .FRAME_RENDERED(frameDone),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
