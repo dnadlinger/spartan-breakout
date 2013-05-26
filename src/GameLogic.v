@@ -92,6 +92,25 @@ module GameLogic(
       (PADDLE_X_PIXEL - ballSizePixel < ballX[15:6]) &&
       (ballX[15:6] < PADDLE_X_PIXEL + paddleLengthPixel);
 
+   wire [35:0] chipscopeControl;
+   chipscope_icon chipscopeIcon (
+    .CONTROL0(chipscopeControl) // INOUT BUS [35:0]
+   );
+   chipscope_collision_ila chipcsopeIla (
+    .CONTROL(chipscopeControl), // INOUT BUS [35:0]
+    .CLK(CLK), // IN
+    .TRIG0(ballX), // IN BUS [15:0]
+    .TRIG1(ballY), // IN BUS [15:0]
+    .TRIG2(cXTile), // IN BUS [6:0]
+    .TRIG3(cYTile), // IN BUS [6:0]
+    .TRIG4(cInBlockArea), // IN BUS [0:0]
+    .TRIG5(canHitBlockX), // IN BUS [0:0]
+    .TRIG6(canHitBlockY), // IN BUS [0:0]
+    .TRIG7(adjXBlock), // IN BUS [6:0]
+    .TRIG8(adjYBlock), // IN BUS [6:0]
+    .TRIG9(adjDiagBlock) // IN BUS [6:0]
+);
+
    always @(posedge CLK) begin
       case (physPhase)
          PhysPhase_extrapolate: begin
@@ -237,8 +256,8 @@ module GameLogic(
                   if (BTN_RELEASE) begin
                      ballState <= Ball_inGame;
                      // TODO: Generate velocity based on frame counter.
-                     ballVelocityX <= {10'd0, 6'd4};
-                     ballVelocityY <= -{10'd0, 6'd8};
+                     ballVelocityX <= {10'd0, 6'd1};
+                     ballVelocityY <= -{10'd0, 6'd2};
                   end
                   ballX <= {PADDLE_X_PIXEL + ((paddleLengthPixel - ballSizePixel) / 2), 6'd0};
                   ballY <= {(paddleYPixel - ballSizePixel), 6'd0};
