@@ -20,7 +20,8 @@ module GamePhysics(
    output [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
    output [9:0] BALL_Y_PIXEL,
-   output [71:0] BLOCK_STATE
+   output [71:0] BLOCK_STATE,
+   output reg BALL_LOST
    );
 
    `include "game-geometry.v"
@@ -95,6 +96,9 @@ module GamePhysics(
       (PADDLE_X_PIXEL - ballSizePixel < ballX[15:6]) &&
       (ballX[15:6] < PADDLE_X_PIXEL + paddleLengthPixel);
 
+   // The ball is lost if it completely left the screen at the bottom.
+   wire ballLost = cYTile == (paddleYTile + 7'd3);
+
    always @(posedge CLK) begin
       if (RESET) begin
          blockState <= 73'b0111111111111111111111111111111111111111111111111111111111111111111111111;
@@ -106,6 +110,7 @@ module GamePhysics(
          ballVelocityX <= 16'h0;
          ballVelocityY <= 16'h0;
          paddleX <= {10'd370, 6'd0};
+         BALL_LOST <= 1'b0;
       end else case (physPhase)
          PhysPhase_extrapolate: begin
             newPaddleX <= paddleX -
@@ -259,10 +264,14 @@ module GamePhysics(
                Ball_inGame: begin
                   ballX <= ballX + ballVelocityX;
                   ballY <= ballY + ballVelocityY;
+
+                  if (ballLost) begin
+                     ballState <= Ball_lost;
+                     BALL_LOST <= 1'b1;
+                  end
                end
-               default: begin // Unused.
-                  ballX <= {10'd395, 6'd0};
-                  ballY <= {10'd400, 6'd0};
+               Ball_lost: begin
+                  // Do nothing, wait for reset.
                end
             endcase
 
