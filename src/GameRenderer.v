@@ -21,13 +21,14 @@ module GameRenderer(
    `include "game-geometry.v"
 
    // The whole logic is driven by the SVGA interface.
-   wire [9:0] currXPixel;
+   wire [10:0] currXPixelFull;
+   wire [9:0] currXPixel = currXPixelFull[9:0];
    wire [9:0] currYPixel;
    reg [7:0] currColor;
    SVGAInterface videoInterface(
       .CLK(CLK),
       .COLOR_IN(currColor),
-      .X_PIXEL(currXPixel),
+      .X_PIXEL(currXPixelFull),
       .Y_PIXEL(currYPixel),
       .COLOR_OUT(COLOR),
       .HSYNC(HSYNC),
@@ -38,7 +39,7 @@ module GameRenderer(
    wire [6:0] currXTile = currXPixel[9:3];
    wire [6:0] currYTile = currYPixel[9:3];
 
-   // Draw the game housing.
+   // Game housing and paddle.
    wire inHousing = (
          currYTile == ceilingYTile &&
          currXTile >= leftWallXTile &&
@@ -55,11 +56,16 @@ module GameRenderer(
       PADDLE_X_PIXEL <= currXPixel &&
       currXPixel < PADDLE_X_PIXEL + paddleLengthPixel;
 
-   wire inBall =
-      BALL_X_PIXEL <= currXPixel &&
-      BALL_Y_PIXEL <= currYPixel &&
-      currXPixel < BALL_X_PIXEL + ballSizePixel &&
-      currYPixel < BALL_Y_PIXEL + ballSizePixel;
+   // Ball.
+   reg [7:0] ballSprite[7:0];
+   initial
+      $readmemb("src/ball-sprite.dat", ballSprite, 0, 7);
+
+   wire [9:0] ballOffsetXPixel = currXPixel - BALL_X_PIXEL;
+   wire [9:0] ballOffsetYPixel = currYPixel - BALL_Y_PIXEL;
+   wire [7:0] spriteLine = ballSprite[ballOffsetYPixel[2:0]];
+   wire inBall = ~|ballOffsetXPixel[9:3] && ~|ballOffsetYPixel[9:3] &&
+      spriteLine[ballOffsetXPixel[2:0]];
 
    wire [6:0] blockXTile = currXTile - blockStartXTile;
    wire [3:0] blockCol = blockXTile[6:3];
