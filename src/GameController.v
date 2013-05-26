@@ -13,8 +13,14 @@ module GameController(
    output [71:0] BLOCK_STATE
    );
 
+   reg reset = 1'b1;
+   always @(posedge CLK) begin
+      reset <= 1'b0;
+   end
+
    GamePhysics physics(
       .CLK(CLK),
+      .RESET(reset),
       .START_UPDATE(FRAME_RENDERED && !SW_PAUSE),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),

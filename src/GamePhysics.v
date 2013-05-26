@@ -12,6 +12,7 @@
 /// in the top left corner of the respective object.
 module GamePhysics(
    input CLK,
+   input RESET,
    input START_UPDATE,
    input BTN_LEFT,
    input BTN_RIGHT,
@@ -24,31 +25,33 @@ module GamePhysics(
 
    `include "game-geometry.v"
 
-   //reg [72:0] blockState = 73'b0111111111111010101010101101010101010010101010101101010101010111111111111;
-   reg [72:0] blockState = 73'b0111111111111111111111111111111111111111111111111111111111111111111111111;
+   // State of the destroyable blocks, 1 for present. The 73th bit is just a
+   // dummy value that is always 0, and used to unify handling of all the
+   // edge cases in address calculation.
+   reg [72:0] blockState;
 
    // Number of timesteps already done this frame.
-   reg [3:0] timestepCount = 4'd0;
+   reg [3:0] timestepCount;
 
    // Physics simulation works in three phases.
    parameter PhysPhase_extrapolate = 2'd0;
    parameter PhysPhase_computePartnerBlocks = 2'd1;
    parameter PhysPhase_collide = 2'd2;
    parameter PhysPhase_update = 2'd3;
-   reg [1:0] physPhase = PhysPhase_extrapolate;
+   reg [1:0] physPhase;
 
    // Ball state.
    parameter Ball_waitForRelease = 2'h0;
    parameter Ball_inGame = 2'h1;
    parameter Ball_lost = 3'h2;
-   reg [1:0] ballState = Ball_waitForRelease;
-   reg [15:0] ballX = {10'd395, 6'h0};
-   reg [15:0] ballY = {10'd400, 6'h0};
-   reg [15:0] ballVelocityX = 16'h0;
-   reg [15:0] ballVelocityY = 16'h0;
+   reg [1:0] ballState;
+   reg [15:0] ballX;
+   reg [15:0] ballY;
+   reg [15:0] ballVelocityX;
+   reg [15:0] ballVelocityY;
 
    // Paddle state.
-   reg [15:0] paddleX = {10'd370, 6'd0};
+   reg [15:0] paddleX;
    reg [15:0] newPaddleX;
 
    // Ball collision detection helpers.
@@ -93,7 +96,17 @@ module GamePhysics(
       (ballX[15:6] < PADDLE_X_PIXEL + paddleLengthPixel);
 
    always @(posedge CLK) begin
-      case (physPhase)
+      if (RESET) begin
+         blockState <= 73'b0111111111111111111111111111111111111111111111111111111111111111111111111;
+         timestepCount <= 4'd0;
+         physPhase <= PhysPhase_extrapolate;
+         ballState <= Ball_waitForRelease;
+         ballX <= {10'd395, 6'h0};
+         ballY <= {10'd400, 6'h0};
+         ballVelocityX <= 16'h0;
+         ballVelocityY <= 16'h0;
+         paddleX <= {10'd370, 6'd0};
+      end else case (physPhase)
          PhysPhase_extrapolate: begin
             newPaddleX <= paddleX -
                BTN_LEFT * paddleSpeedSubpixel +
