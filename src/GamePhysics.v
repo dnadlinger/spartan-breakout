@@ -17,6 +17,7 @@ module GamePhysics(
    input BTN_LEFT,
    input BTN_RIGHT,
    input BTN_RELEASE,
+   input SW_IGNORE_DEATH,
    output [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
    output [9:0] BALL_Y_PIXEL,
@@ -97,7 +98,7 @@ module GamePhysics(
       (ballX[15:6] < PADDLE_X_PIXEL + paddleLengthPixel);
 
    // The ball is lost if it completely left the screen at the bottom.
-   wire ballLost = cYTile == (paddleYTile + 7'd3);
+   wire ballLost = cYTile == (paddleYTile + 7'd3) && !SW_IGNORE_DEATH;
 
    always @(posedge CLK) begin
       if (RESET) begin
