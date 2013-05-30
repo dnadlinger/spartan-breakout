@@ -22,14 +22,15 @@ module GameRenderer(
    `include "game-geometry.v"
 
    // The whole logic is driven by the SVGA interface.
-   wire [10:0] currXPixelFull;
-   wire [9:0] currXPixel = currXPixelFull[9:0];
+   wire [10:0] currXPixel;
    wire [9:0] currYPixel;
    wire [7:0] gameAreaColor;
+   wire [7:0] statsColor;
+
    SVGAInterface videoInterface(
       .CLK(CLK),
-      .COLOR_IN(gameAreaColor),
-      .X_PIXEL(currXPixelFull),
+      .COLOR_IN(gameAreaColor | statsColor),
+      .X_PIXEL(currXPixel),
       .Y_PIXEL(currYPixel),
       .COLOR_OUT(COLOR),
       .HSYNC(HSYNC),
@@ -37,7 +38,7 @@ module GameRenderer(
    );
 
    GameAreaRenderer gameAreaRenderer(
-      .CURR_X_PIXEL(currXPixel),
+      .CURR_X_PIXEL(currXPixel[9:0]),
       .CURR_Y_PIXEL(currYPixel),
       .PADDLE_X_PIXEL(PADDLE_X_PIXEL),
       .BALL_X_PIXEL(BALL_X_PIXEL),
@@ -47,6 +48,16 @@ module GameRenderer(
       .COLOR(gameAreaColor)
    );
 
+   StatsRenderer statsRenderer(
+      .CLK(CLK),
+      .CURR_X_PIXEL(currXPixel),
+      .CURR_Y_PIXEL(currYPixel),
+      .LIVES(3'd1),
+      .SCORE_100(4'd1),
+      .SCORE_10(4'd2),
+      .SCORE_1(4'd3),
+      .COLOR(statsColor)
+   );
 
    // Synchronously generate the syncing signal for the game logic.
    always @(posedge CLK) begin
