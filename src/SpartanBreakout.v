@@ -25,7 +25,8 @@ module SpartanBreakout(
    wire [9:0] paddleXPixel;
    wire [9:0] ballXPixel;
    wire [9:0] ballYPixel;
-   wire [71:0] blockState;
+   wire [6:0] blockAddr;
+   wire blockAlive;
    GameController controller(
       .CLK(CLK_40M),
       .RESET(reset),
@@ -38,7 +39,8 @@ module SpartanBreakout(
       .PADDLE_X_PIXEL(paddleXPixel),
       .BALL_X_PIXEL(ballXPixel),
       .BALL_Y_PIXEL(ballYPixel),
-      .BLOCK_STATE(blockState)
+      .BLOCK_ADDR(blockAddr),
+      .BLOCK_ALIVE(blockAlive)
    );
 
    GameRenderer renderer(
@@ -46,7 +48,8 @@ module SpartanBreakout(
       .PADDLE_X_PIXEL(paddleXPixel),
       .BALL_X_PIXEL(ballXPixel),
       .BALL_Y_PIXEL(ballYPixel),
-      .BLOCK_STATE(blockState),
+      .BLOCK_ADDR(blockAddr),
+      .BLOCK_ALIVE(blockAlive),
       .FRAME_DONE(frameDone),
       .COLOR(COLOR),
       .HSYNC(HSYNC),

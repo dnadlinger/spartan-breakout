@@ -12,7 +12,8 @@ module GameController(
    output [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
    output [9:0] BALL_Y_PIXEL,
-   output [71:0] BLOCK_STATE
+   inout [6:0] BLOCK_ADDR,
+   output BLOCK_ALIVE
    );
 
    GamePhysics physics(
@@ -26,6 +27,7 @@ module GameController(
       .PADDLE_X_PIXEL(PADDLE_X_PIXEL),
       .BALL_X_PIXEL(BALL_X_PIXEL),
       .BALL_Y_PIXEL(BALL_Y_PIXEL),
-      .BLOCK_STATE(BLOCK_STATE)
+      .BLOCK_ADDR(BLOCK_ADDR),
+      .BLOCK_ALIVE(BLOCK_ALIVE)
    );
 endmodule

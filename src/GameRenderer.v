@@ -11,7 +11,8 @@ module GameRenderer(
    input [9:0] PADDLE_X_PIXEL,
    input [9:0] BALL_X_PIXEL,
    input [9:0] BALL_Y_PIXEL,
-   input [71:0] BLOCK_STATE,
+   output [6:0] BLOCK_ADDR,
+   input BLOCK_ALIVE,
    output reg FRAME_DONE,
    output [7:0] COLOR,
    output HSYNC,
@@ -67,14 +68,18 @@ module GameRenderer(
    wire inBall = ~|ballOffsetXPixel[9:3] && ~|ballOffsetYPixel[9:3] &&
       spriteLine[ballOffsetXPixel[2:0]];
 
-   wire [6:0] blockXTile = currXTile - blockStartXTile;
+   // Block state reading logic.
+   // The blocks never touch the vertical screen edges, so we can get away with
+   // not updating the y coordinate.
+   wire [6:0] blockXTile = currXPixel[9:3] - blockStartXTile;
    wire [3:0] blockCol = blockXTile[6:3];
+   wire [9:0] nextXPixel = currXPixel + 10'd1;
+   wire [6:0] nextXTile = nextXPixel[9:3] - blockStartXTile;
+   wire [3:0] nextCol = nextXTile[6:3];
    wire [6:0] blockYTile = currYTile - blockStartYTile;
    wire [5:0] blockRow = blockYTile[6:1];
-   wire inBlock =
-      blockCol < blockColCount &&
-      blockRow < blockRowCount &&
-      BLOCK_STATE[(blockRow[2:0] * blockColCount) + blockCol];
+   assign BLOCK_ADDR = (blockRow[2:0] * blockColCount) + nextCol;
+   wire inBlock = blockCol < blockColCount && blockRow < blockRowCount && BLOCK_ALIVE;
 
    reg[7:0] blockColor;
    always @(blockRow) begin

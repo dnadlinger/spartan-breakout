@@ -21,7 +21,8 @@ module GamePhysics(
    output [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
    output [9:0] BALL_Y_PIXEL,
-   output [71:0] BLOCK_STATE,
+   input [6:0] BLOCK_ADDR,
+   output BLOCK_ALIVE,
    output reg BALL_LOST
    );
 
@@ -30,17 +31,35 @@ module GamePhysics(
    // State of the destroyable blocks, 1 for present. The 73th bit is just a
    // dummy value that is always 0, and used to unify handling of all the
    // edge cases in address calculation.
-   reg [72:0] blockState;
+   reg [6:0] blockStateAddr;
+   wire blockStateData;
+   reg blockStateWriteEnable = 1'b0;
+   reg blockStateWriteData;
+   BlockState blockState(
+      .CLK(CLK),
+      .A_ADDR(blockStateAddr),
+      .A_IN(blockStateWriteData),
+      .A_WRITE_ENABLE(blockStateWriteEnable),
+      .A_OUT(blockStateData),
+      .B_ADDR(BLOCK_ADDR),
+      .B_OUT(BLOCK_ALIVE)
+   );
 
    // Number of timesteps already done this frame.
    reg [3:0] timestepCount;
 
    // Physics simulation works in three phases.
-   parameter PhysPhase_extrapolate = 2'd0;
-   parameter PhysPhase_computePartnerBlocks = 2'd1;
-   parameter PhysPhase_collide = 2'd2;
-   parameter PhysPhase_update = 2'd3;
-   reg [1:0] physPhase;
+   parameter PhysPhase_extrapolate = 4'd0;
+   parameter PhysPhase_computePartnerBlocks = 4'd1;
+   parameter PhysPhase_beginLoad = 4'd2;
+   parameter PhysPhase_loadXBlock = 4'd3;
+   parameter PhysPhase_loadYBlock = 4'd4;
+   parameter PhysPhase_loadDiagBlock = 4'd5;
+   parameter PhysPhase_collide = 4'd6;
+   parameter PhysPhase_update = 4'd7;
+   parameter PhysPhase_storeYBlock = 4'd8;
+   parameter PhysPhase_storeDiagBlock = 4'd9;
+   reg [3:0] physPhase;
 
    // Ball state.
    parameter Ball_waitForRelease = 2'h0;
@@ -82,12 +101,15 @@ module GamePhysics(
    reg [6:0] cYTile;
    wire [6:0] cYBlockOffset = cYTile - blockStartYTile;
    wire [2:0] cYBlock = cYBlockOffset[3:1];
-   wire [2:0] cYBlockPlusOne = cYBlock + 3'd1;
    wire isTopBlock = cYBlock == 3'd0;
    wire isBottomBlock = cYBlock == (blockRowCount - 3'd1);
    reg [6:0] cAltYTile;
    wire [6:0] cAltYBlockOffset = cAltYTile - blockStartYTile;
    wire [2:0] cAltYBlock = cAltYBlockOffset[3:1];
+
+   // This needs to properly overflow for the first row to be handled correctly,
+   // and there doesn't seem to be a way to achieve that in a single expression.
+   wire [2:0] cYBlockPlusOne = cYBlock + 3'd1;
 
    wire cAboveFirstRow = &cYBlockOffset && !ballGoesUp;
    wire cBeneathLastRow = cYBlockOffset == {blockRowCount, 1'b0} && ballGoesUp;
@@ -99,15 +121,18 @@ module GamePhysics(
    reg atYBlockBoundary;
 
    reg [6:0] adjXBlock;
+   reg adjXBlockAlive;
    reg [6:0] adjYBlock;
+   reg adjYBlockAlive;
    reg [6:0] adjDiagBlock;
+   reg adjDiagBlockAlive;
    parameter invalidBlock = 7'd72;
 
-   wire hitXBlock = cInBlockArea && canHitBlockX && blockState[adjXBlock];
-   wire hitYBlock = cInBlockArea && canHitBlockY && blockState[adjYBlock];
-   wire hitDiagBlockHoriz = cInBlockArea && canHitBlockX && !hitXBlock && atYBlockBoundary && blockState[adjDiagBlock];
-   wire hitDiagBlockVert = cInBlockArea && canHitBlockY && !hitYBlock && atXBlockBoundary && blockState[adjDiagBlock];
-   wire hitDiagBlockDiag = cInBlockArea && canHitBlockX && canHitBlockY && !hitXBlock && !hitYBlock && blockState[adjDiagBlock];
+   wire hitXBlock = cInBlockArea && canHitBlockX && adjXBlockAlive;
+   wire hitYBlock = cInBlockArea && canHitBlockY && adjYBlockAlive;
+   wire hitDiagBlockHoriz = cInBlockArea && canHitBlockX && !hitXBlock && atYBlockBoundary && adjDiagBlockAlive;
+   wire hitDiagBlockVert = cInBlockArea && canHitBlockY && !hitYBlock && atXBlockBoundary && adjDiagBlockAlive;
+   wire hitDiagBlockDiag = cInBlockArea && canHitBlockX && canHitBlockY && !hitXBlock && !hitYBlock && adjDiagBlockAlive;
    wire hitLeftWall = ballAtTileX && ballGoesLeft && ballXTile == (leftWallXTile + 1);
    wire hitRightWall = ballAtTileX && !ballGoesLeft && ballXTile == (rightWallXTile - 1);
    wire hitCeiling = ballAtTileY && ballGoesUp && ballYTile == (ceilingYTile + 1);
@@ -120,7 +145,6 @@ module GamePhysics(
 
    always @(posedge CLK) begin
       if (RESET) begin
-         blockState <= 73'b0111111111111111111111111111111111111111111111111111111111111111111111111;
          timestepCount <= 4'd0;
          physPhase <= PhysPhase_extrapolate;
          ballState <= Ball_waitForRelease;
@@ -132,6 +156,8 @@ module GamePhysics(
          BALL_LOST <= 1'b0;
       end else case (physPhase)
          PhysPhase_extrapolate: begin
+            blockStateWriteEnable <= 1'b0;
+
             newPaddleX <= paddleX -
                BTN_LEFT * paddleSpeedSubpixel +
                BTN_RIGHT * paddleSpeedSubpixel;
@@ -217,24 +243,60 @@ module GamePhysics(
                end
             end
 
+            // We need to assign the result of our computation to blockStateAddr
+            // as well. Unfortunately, I couldn't find a nicer way to do this
+            // than just duplicating the assignment.
             if (cAboveFirstRow) begin
                adjXBlock <= invalidBlock;
+               blockStateAddr <= invalidBlock;
             end else if (ballGoesLeft) begin
                if (isLeftBlock) begin
                   adjXBlock <= invalidBlock;
+                  blockStateAddr <= invalidBlock;
                end else begin
                   adjXBlock <= cYBlock * blockColCount + cXBlock - 1;
+                  blockStateAddr <= cYBlock * blockColCount + cXBlock - 1;
                end
             end else begin
                if (isRightBlock) begin
                   adjXBlock <= invalidBlock;
+                  blockStateAddr <= invalidBlock;
                end else begin
                   adjXBlock <= cYBlock * blockColCount + cXBlock + 1;
+                  blockStateAddr <= cYBlock * blockColCount + cXBlock + 1;
                end
             end
 
             atXBlockBoundary <= cXBlock != cAltXBlock;
             atYBlockBoundary <= cYBlock != cAltYBlock;
+
+            // Advance phase.
+            physPhase <= PhysPhase_beginLoad;
+         end
+
+         PhysPhase_beginLoad: begin
+            // Advance phase.
+            blockStateAddr <= adjYBlock;
+            physPhase <= PhysPhase_loadXBlock;
+         end
+
+         PhysPhase_loadXBlock: begin
+            adjXBlockAlive <= blockStateData;
+
+            // Advance phase.
+            blockStateAddr <= adjDiagBlock;
+            physPhase <= PhysPhase_loadYBlock;
+         end
+
+         PhysPhase_loadYBlock: begin
+            adjYBlockAlive <= blockStateData;
+
+            // Advance phase.
+            physPhase <= PhysPhase_loadDiagBlock;
+         end
+
+         PhysPhase_loadDiagBlock: begin
+            adjDiagBlockAlive <= blockStateData;
 
             // Advance phase.
             physPhase <= PhysPhase_collide;
@@ -260,15 +322,15 @@ module GamePhysics(
             end
 
             if (hitXBlock) begin
-               blockState[adjXBlock] <= 1'b0;
+               adjXBlockAlive <= 1'b0;
             end
 
             if (hitYBlock) begin
-               blockState[adjYBlock] <= 1'b0;
+               adjYBlockAlive <= 1'b0;
             end
 
             if (hitDiagBlockHoriz || hitDiagBlockVert || hitDiagBlockDiag) begin
-               blockState[adjDiagBlock] <= 1'b0;
+               adjDiagBlockAlive <= 1'b0;
             end
 
             // Advance phase.
@@ -303,6 +365,26 @@ module GamePhysics(
                end
             endcase
 
+            blockStateAddr <= adjXBlock;
+            blockStateWriteData <= adjXBlockAlive;
+            blockStateWriteEnable <= 1'b1;
+
+            // Advance phase.
+            physPhase <= PhysPhase_storeYBlock;
+         end
+
+         PhysPhase_storeYBlock: begin
+            blockStateAddr <= adjYBlock;
+            blockStateWriteData <= adjYBlockAlive;
+
+            // Advance phase.
+            physPhase <= PhysPhase_storeDiagBlock;
+         end
+
+         PhysPhase_storeDiagBlock: begin
+            blockStateAddr <= adjDiagBlock;
+            blockStateWriteData <= adjDiagBlockAlive;
+
             // Advance phase.
             physPhase <= PhysPhase_extrapolate;
          end
@@ -312,5 +394,4 @@ module GamePhysics(
    assign BALL_X_PIXEL = ballX[15:6];
    assign BALL_Y_PIXEL = ballY[15:6];
    assign PADDLE_X_PIXEL = paddleX[15:6];
-   assign BLOCK_STATE = blockState[71:0];
 endmodule
