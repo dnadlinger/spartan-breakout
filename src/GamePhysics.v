@@ -65,35 +65,53 @@ module GamePhysics(
    wire ballAtTileX = ballX[8:6] == 3'd0;
    wire ballAtTileY = ballY[8:6] == 3'd0;
 
+   wire [9:0] ballEndXPixel = ballX[15:6] + ballSizePixel - 1;
+   wire [6:0] ballEndXTile = ballEndXPixel[9:3];
+   wire [9:0] ballEndYPixel = ballY[15:6] + ballSizePixel - 1;
+   wire [6:0] ballEndYTile = ballEndYPixel[9:3];
+
    reg [6:0] cXTile;
    wire [6:0] cXBlockOffset = cXTile - blockStartXTile;
    wire [3:0] cXBlock = cXBlockOffset[6:3];
    wire isLeftBlock = cXBlock == 4'd0;
-   wire isRightBlock = cXBlock == blockColCount;
+   wire isRightBlock = cXBlock == (blockColCount - 4'd1);
+   reg [6:0] cAltXTile;
+   wire [6:0] cAltXBlockOffset = cAltXTile - blockStartXTile;
+   wire [3:0] cAltXBlock = cAltXBlockOffset[6:3];
 
    reg [6:0] cYTile;
-   wire [6:0] cYBlockOffset = (cYTile - blockStartYTile);
+   wire [6:0] cYBlockOffset = cYTile - blockStartYTile;
    wire [2:0] cYBlock = cYBlockOffset[3:1];
+   wire [2:0] cYBlockPlusOne = cYBlock + 3'd1;
    wire isTopBlock = cYBlock == 3'd0;
-   wire isBottomBlock = cYBlock == blockRowCount;
+   wire isBottomBlock = cYBlock == (blockRowCount - 3'd1);
+   reg [6:0] cAltYTile;
+   wire [6:0] cAltYBlockOffset = cAltYTile - blockStartYTile;
+   wire [2:0] cAltYBlock = cAltYBlockOffset[3:1];
 
-   wire cInBlockArea = cYBlockOffset[6:1] < blockRowCount ||
-      (ballGoesUp && cYBlockOffset[6:1] == blockRowCount);
+   wire cAboveFirstRow = &cYBlockOffset && !ballGoesUp;
+   wire cBeneathLastRow = cYBlockOffset == {blockRowCount, 1'b0} && ballGoesUp;
+   wire cInBlockArea = cYBlockOffset[6:1] < blockRowCount || cAboveFirstRow || cBeneathLastRow;
+
    reg canHitBlockX;
    reg canHitBlockY;
+   reg atXBlockBoundary;
+   reg atYBlockBoundary;
 
    reg [6:0] adjXBlock;
    reg [6:0] adjYBlock;
    reg [6:0] adjDiagBlock;
    parameter invalidBlock = 7'd72;
 
-   wire hitBlockX = cInBlockArea && canHitBlockX && blockState[adjXBlock];
-   wire hitBlockY = cInBlockArea && canHitBlockY && blockState[adjYBlock];
-   wire hitBlockDiag = cInBlockArea && canHitBlockX && canHitBlockY && blockState[adjDiagBlock];
-   wire hitLeftWall = ballAtTileX && ballGoesLeft && cXTile == (leftWallXTile + 1);
-   wire hitRightWall = ballAtTileX && !ballGoesLeft && cXTile == rightWallXTile;
-   wire hitCeiling = ballAtTileY && ballGoesUp && cYTile == (ceilingYTile + 1);
-   wire hitPaddle = ballAtTileY && !ballGoesUp && cYTile == paddleYTile &&
+   wire hitXBlock = cInBlockArea && canHitBlockX && blockState[adjXBlock];
+   wire hitYBlock = cInBlockArea && canHitBlockY && blockState[adjYBlock];
+   wire hitDiagBlockHoriz = cInBlockArea && canHitBlockX && !hitXBlock && atYBlockBoundary && blockState[adjDiagBlock];
+   wire hitDiagBlockVert = cInBlockArea && canHitBlockY && !hitYBlock && atXBlockBoundary && blockState[adjDiagBlock];
+   wire hitDiagBlockDiag = cInBlockArea && canHitBlockX && canHitBlockY && !hitXBlock && !hitYBlock && blockState[adjDiagBlock];
+   wire hitLeftWall = ballAtTileX && ballGoesLeft && ballXTile == (leftWallXTile + 1);
+   wire hitRightWall = ballAtTileX && !ballGoesLeft && ballXTile == (rightWallXTile - 1);
+   wire hitCeiling = ballAtTileY && ballGoesUp && ballYTile == (ceilingYTile + 1);
+   wire hitPaddle = ballAtTileY && !ballGoesUp && ballYTile == (paddleYTile - 1) &&
       (PADDLE_X_PIXEL - ballSizePixel < ballX[15:6]) &&
       (ballX[15:6] < PADDLE_X_PIXEL + paddleLengthPixel);
 
@@ -119,21 +137,25 @@ module GamePhysics(
                BTN_RIGHT * paddleSpeedSubpixel;
 
             if (ballGoesLeft) begin
-               cXTile <= ballXTile;
+               cXTile <= ballEndXTile;
+               cAltXTile <= ballXTile;
                canHitBlockX <= ballAtTileX &&
                   ballXTile[2:0] == blockStartXTile[2:0];
             end else begin
-               cXTile <= ballXTile + 7'd1;
+               cXTile <= ballXTile;
+               cAltXTile <= ballEndXTile;
                canHitBlockX <= ballAtTileX &&
                   ballXTile[2:0] == (blockStartXTile[2:0] - 3'd1);
             end
 
             if (ballGoesUp) begin
-               cYTile <= ballYTile;
+               cYTile <= ballEndYTile;
+               cAltYTile <= ballYTile;
                canHitBlockY <= ballAtTileY &&
                   (ballYTile[0] == blockStartYTile[0]);
             end else begin
-               cYTile <= ballYTile + 6'd1;
+               cYTile <= ballYTile;
+               cAltYTile <= ballEndYTile;
                canHitBlockY <= ballAtTileY &&
                   (ballYTile[0] != blockStartYTile[0]);
             end
@@ -158,18 +180,18 @@ module GamePhysics(
                   adjYBlock <= invalidBlock;
                   adjDiagBlock <= invalidBlock;
                end else begin
-                  adjYBlock <= (cYBlock - 1) * blockColCount + cXBlock;
+                  adjYBlock <= (cYBlock - 3'd1) * blockColCount + cXBlock;
                   if (ballGoesLeft) begin
                      if (isLeftBlock) begin
                         adjDiagBlock <= invalidBlock;
                      end else begin
-                        adjDiagBlock <= (cYBlock - 1) * blockColCount + cXBlock - 1;
+                        adjDiagBlock <= (cYBlock - 3'd1) * blockColCount + cXBlock - 1;
                      end
                   end else begin
                      if (isRightBlock) begin
                         adjDiagBlock <= invalidBlock;
                      end else begin
-                        adjDiagBlock <= (cYBlock - 1) * blockColCount + cXBlock;
+                        adjDiagBlock <= (cYBlock - 3'd1) * blockColCount + cXBlock + 1;
                      end
                   end
                end
@@ -178,24 +200,26 @@ module GamePhysics(
                   adjYBlock <= invalidBlock;
                   adjDiagBlock <= invalidBlock;
                end else begin
-                  adjYBlock <= cYBlock * blockColCount + cXBlock;
+                  adjYBlock <= cYBlockPlusOne * blockColCount + cXBlock;
                   if (ballGoesLeft) begin
                      if (isLeftBlock) begin
                         adjDiagBlock <= invalidBlock;
                      end else begin
-                        adjDiagBlock <= cYBlock * blockColCount + cXBlock - 1;
+                        adjDiagBlock <= cYBlockPlusOne * blockColCount + cXBlock - 1;
                      end
                   end else begin
                      if (isRightBlock) begin
                         adjDiagBlock <= invalidBlock;
                      end else begin
-                        adjDiagBlock <= cYBlock * blockColCount + cXBlock;
+                        adjDiagBlock <= cYBlockPlusOne * blockColCount + cXBlock + 1;
                      end
                   end
                end
             end
 
-            if (ballGoesLeft) begin
+            if (cAboveFirstRow) begin
+               adjXBlock <= invalidBlock;
+            end else if (ballGoesLeft) begin
                if (isLeftBlock) begin
                   adjXBlock <= invalidBlock;
                end else begin
@@ -205,9 +229,12 @@ module GamePhysics(
                if (isRightBlock) begin
                   adjXBlock <= invalidBlock;
                end else begin
-                  adjXBlock <= cYBlock * blockColCount + cXBlock;
+                  adjXBlock <= cYBlock * blockColCount + cXBlock + 1;
                end
             end
+
+            atXBlockBoundary <= cXBlock != cAltXBlock;
+            atYBlockBoundary <= cYBlock != cAltYBlock;
 
             // Advance phase.
             physPhase <= PhysPhase_collide;
@@ -224,23 +251,23 @@ module GamePhysics(
                // SOUND: Hit wall.
             end
 
-            if (hitLeftWall || hitRightWall || hitBlockX || (hitBlockDiag && !hitBlockY)) begin
+            if (hitLeftWall || hitRightWall || hitXBlock || hitDiagBlockHoriz || hitDiagBlockDiag) begin
                ballVelocityX <= -ballVelocityX;
             end
 
-            if (hitCeiling || hitPaddle || hitBlockY || (hitBlockDiag && !hitBlockX)) begin
+            if (hitCeiling || hitPaddle || hitYBlock || hitDiagBlockVert || hitDiagBlockDiag) begin
                ballVelocityY <= -ballVelocityY;
             end
 
-            if (hitBlockX) begin
+            if (hitXBlock) begin
                blockState[adjXBlock] <= 1'b0;
             end
 
-            if (hitBlockY) begin
+            if (hitYBlock) begin
                blockState[adjYBlock] <= 1'b0;
             end
 
-            if (hitBlockDiag && !hitBlockX && !hitBlockY) begin
+            if (hitDiagBlockHoriz || hitDiagBlockVert || hitDiagBlockDiag) begin
                blockState[adjDiagBlock] <= 1'b0;
             end
 
