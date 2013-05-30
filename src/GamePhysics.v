@@ -18,12 +18,17 @@ module GamePhysics(
    input BTN_RIGHT,
    input BTN_RELEASE,
    input SW_IGNORE_DEATH,
+   output reg STEP_COMPLETE,
+   output reg HIT_WALL,
+   output reg HIT_PADDLE,
+   output reg HIT_BLOCK,
+   output reg [2:0] HIT_BLOCK_ROW,
+   output reg BALL_LOST,
    output [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
    output [9:0] BALL_Y_PIXEL,
    input [6:0] BLOCK_ADDR,
-   output BLOCK_ALIVE,
-   output reg BALL_LOST
+   output BLOCK_ALIVE
    );
 
    `include "game-geometry.v"
@@ -323,15 +328,24 @@ module GamePhysics(
 
             if (hitXBlock) begin
                adjXBlockAlive <= 1'b0;
+               HIT_BLOCK <= 1'b1;
+               HIT_BLOCK_ROW <= cYBlock;
             end
 
             if (hitYBlock) begin
                adjYBlockAlive <= 1'b0;
+               HIT_BLOCK <= 1'b1;
+               HIT_BLOCK_ROW <= ballGoesUp ? (cYBlock - 3'd1) : cYBlockPlusOne;
             end
 
             if (hitDiagBlockHoriz || hitDiagBlockVert || hitDiagBlockDiag) begin
                adjDiagBlockAlive <= 1'b0;
+               HIT_BLOCK <= 1'b1;
+               HIT_BLOCK_ROW <= ballGoesUp ? (cYBlock - 3'd1) : cYBlockPlusOne;
             end
+
+            HIT_WALL <= hitLeftWall || hitRightWall || hitCeiling;
+            HIT_PADDLE <= hitPaddle;
 
             // Advance phase.
             physPhase <= PhysPhase_update;
@@ -365,6 +379,8 @@ module GamePhysics(
                end
             endcase
 
+            STEP_COMPLETE <= 1'b1;
+
             blockStateAddr <= adjXBlock;
             blockStateWriteData <= adjXBlockAlive;
             blockStateWriteEnable <= 1'b1;
@@ -374,6 +390,12 @@ module GamePhysics(
          end
 
          PhysPhase_storeYBlock: begin
+            HIT_WALL <= 1'b0;
+            HIT_PADDLE <= 1'b0;
+            HIT_BLOCK <= 1'b0;
+            STEP_COMPLETE <= 1'b0;
+            BALL_LOST <= 1'b0;
+
             blockStateAddr <= adjYBlock;
             blockStateWriteData <= adjYBlockAlive;
 

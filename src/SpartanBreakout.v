@@ -15,6 +15,8 @@ module SpartanBreakout(
    output AUDIO_OUT
    );
 
+   `include "audio-samples.v"
+
    reg initialReset = 1'b1;
    always @(posedge CLK_40M) begin
       initialReset <= 1'b0;
@@ -27,6 +29,8 @@ module SpartanBreakout(
    wire [9:0] ballYPixel;
    wire [6:0] blockAddr;
    wire blockAlive;
+   wire [sampleBits - 1:0] audioSelect;
+   wire audioTrigger;
    GameController controller(
       .CLK(CLK_40M),
       .RESET(reset),
@@ -36,6 +40,8 @@ module SpartanBreakout(
       .BTN_RELEASE(BTN_A | BTN_B),
       .SW_PAUSE(SW_PAUSE),
       .SW_IGNORE_DEATH(SW_IGNORE_DEATH),
+      .AUDIO_SELECT(audioSelect),
+      .AUDIO_TRIGGER(audioTrigger),
       .PADDLE_X_PIXEL(paddleXPixel),
       .BALL_X_PIXEL(ballXPixel),
       .BALL_Y_PIXEL(ballYPixel),
@@ -56,5 +62,10 @@ module SpartanBreakout(
       .VSYNC(VSYNC)
    );
 
-   AudioPlayer audioPlayer(.CLK(CLK_40M), .AUDIO(AUDIO_OUT));
+   SampleBank sampleBank(
+      .CLK(CLK_40M),
+      .SELECT(audioSelect),
+      .TRIGGER(audioTrigger),
+      .AUDIO(AUDIO_OUT)
+   );
 endmodule

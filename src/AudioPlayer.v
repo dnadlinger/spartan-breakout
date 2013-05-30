@@ -1,18 +1,19 @@
 `timescale 1ns / 1ps
 
-module AudioPlayer(
-   input CLK,
-   output AUDIO
-   );
+module AudioPlayer(CLK, FRAME_SELECT, FRAME_SET, AUDIO);
+   parameter FRAME_BITS = 4;
+   parameter FRAME_COUNT = 16;
 
-   parameter frameBits = 4;
-   parameter audioFrameCount = 10;
+   input CLK;
+   input [FRAME_BITS - 1:0] FRAME_SELECT;
+   input FRAME_SET;
+   output AUDIO;
 
-   reg [15:0] audioPeriods[0:audioFrameCount - 1];
-   reg [9:0] audioDurs[0:audioFrameCount - 1];
+   reg [15:0] periods[0:FRAME_COUNT - 1];
+   reg [9:0] durations[0:FRAME_COUNT - 1];
    initial begin
-      $readmemh("src/audio-periods.dat", audioPeriods, 0, audioFrameCount - 1);
-      $readmemh("src/audio-durs.dat", audioDurs, 0, audioFrameCount - 1);
+      $readmemh("src/audio-periods.dat", periods, 0, FRAME_COUNT - 1);
+      $readmemh("src/audio-durs.dat", durations, 0, FRAME_COUNT - 1);
    end
 
    wire tickSequencer;
@@ -26,22 +27,25 @@ module AudioPlayer(
       .TRIG_OUT(tickSequencer)
    );
 
-   reg [frameBits - 1:0] currFrame = 0;
+   reg [FRAME_BITS - 1:0] currFrame = 0;
    reg [9:0] framePos = 0;
    reg [15:0] synthPeriod = 0;
    reg synthEnable = 0;
 
    always@(posedge CLK) begin
-      if (tickSequencer) begin
+      if (FRAME_SET) begin
+         currFrame <= FRAME_SELECT;
+         framePos <= 0;
+      end else if (tickSequencer) begin
          if (framePos == 0) begin
-            synthEnable <= ~(audioPeriods[currFrame] == 0);
-            synthPeriod <= audioPeriods[currFrame];
+            synthEnable <= ~(periods[currFrame] == 0);
+            synthPeriod <= periods[currFrame];
          end
 
-         if (framePos == audioDurs[currFrame]) begin
+         if (framePos == durations[currFrame]) begin
             framePos <= 0;
 
-            if (~(audioDurs[currFrame] == 0 && audioPeriods[currFrame] == 0))
+            if (~(durations[currFrame] == 0 && periods[currFrame] == 0))
                currFrame <= currFrame + 1;
          end else begin
             framePos <= framePos + 1;
