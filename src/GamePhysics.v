@@ -359,8 +359,8 @@ module GamePhysics(
                   if (BTN_RELEASE) begin
                      ballState <= Ball_inGame;
                      // TODO: Generate velocity based on frame counter.
-                     ballVelocityX <= {10'd0, 6'd4};
-                     ballVelocityY <= -{10'd0, 6'd8};
+                     ballVelocityX <= {10'd0, 6'd8};
+                     ballVelocityY <= -{10'd0, 6'd16};
                   end
                   ballX <= {PADDLE_X_PIXEL + ((paddleLengthPixel - ballSizePixel) / 2), 6'd0};
                   ballY <= {(paddleYPixel - ballSizePixel), 6'd0};
@@ -375,7 +375,8 @@ module GamePhysics(
                   end
                end
                Ball_lost: begin
-                  // Do nothing, wait for reset.
+                  paddleX <= {10'd370, 6'd0};
+                  ballState <= Ball_waitForRelease;
                end
             endcase
 

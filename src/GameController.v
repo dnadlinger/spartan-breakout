@@ -83,6 +83,16 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
       end
    end
 
+   always @(posedge CLK) begin
+      if (RESET) begin
+         LIVES <= 3'd5;
+      end else begin
+         if (stepComplete && ballLost) begin
+            LIVES <= LIVES - 3'd1;
+         end
+      end
+   end
+
    wire score1Trig;
    GenericCounter #(
       .COUNTER_WIDTH(4),
