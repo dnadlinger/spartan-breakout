@@ -345,7 +345,7 @@ module GamePhysics(
             end
 
             HIT_WALL <= hitLeftWall || hitRightWall || hitCeiling;
-            HIT_PADDLE <= hitPaddle;
+            HIT_PADDLE <= hitPaddle && (ballState != Ball_waitForRelease);
 
             // Advance phase.
             physPhase <= PhysPhase_update;
