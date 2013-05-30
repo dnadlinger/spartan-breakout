@@ -5,6 +5,7 @@ module StatsRenderer(
    input [10:0] CURR_X_PIXEL,
    input [9:0] CURR_Y_PIXEL,
    input [2:0] LIVES,
+   input [3:0] SCORE_1000,
    input [3:0] SCORE_100,
    input [3:0] SCORE_10,
    input [3:0] SCORE_1,
@@ -48,11 +49,17 @@ module StatsRenderer(
          inDigitX <= 1'b0;
       end
 
-      if (nextXTile == score10000Tile || nextXTile == score1000Tile ||
-         nextXTile == lives100Tile || nextXTile == lives10Tile
+      if (nextXTile == score10000Tile || nextXTile == lives100Tile ||
+         nextXTile == lives10Tile
       ) begin
          xStartTile = nextXTile;
          digit <= 4'd0;
+         inDigitX <= 1'b1;
+      end
+
+      if (nextXTile == score1000Tile) begin
+         xStartTile = score1000Tile;
+         digit <= SCORE_1000;
          inDigitX <= 1'b1;
       end
 

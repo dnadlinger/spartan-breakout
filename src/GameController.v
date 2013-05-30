@@ -3,7 +3,7 @@
 module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
    BTN_RELEASE, SW_PAUSE, SW_IGNORE_DEATH, AUDIO_SELECT, AUDIO_TRIGGER,
    PADDLE_X_PIXEL, BALL_X_PIXEL, BALL_Y_PIXEL, BLOCK_ADDR, BLOCK_ALIVE,
-   LIVES, SCORE_100, SCORE_10, SCORE_1);
+   LIVES, SCORE_1000, SCORE_100, SCORE_10, SCORE_1);
 
    `include "audio-samples.v"
    `include "game-geometry.v"
@@ -24,6 +24,7 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
    input [6:0] BLOCK_ADDR;
    output BLOCK_ALIVE;
    output reg [2:0] LIVES;
+   output [3:0] SCORE_1000;
    output [3:0] SCORE_100;
    output [3:0] SCORE_10;
    output [3:0] SCORE_1;
@@ -106,6 +107,7 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
       .COUNT(SCORE_10)
    );
 
+   wire score100Trig;
    GenericCounter #(
       .COUNTER_WIDTH(4),
       .COUNTER_MAX(9)
@@ -113,6 +115,17 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
       .CLK(CLK),
       .RESET(RESET),
       .ENABLE_IN(score10Trig),
+      .TRIG_OUT(score100Trig),
       .COUNT(SCORE_100)
+   );
+
+   GenericCounter #(
+      .COUNTER_WIDTH(4),
+      .COUNTER_MAX(9)
+   ) score1000Counter (
+      .CLK(CLK),
+      .RESET(RESET),
+      .ENABLE_IN(score100Trig),
+      .COUNT(SCORE_1000)
    );
 endmodule

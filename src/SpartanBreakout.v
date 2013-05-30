@@ -30,6 +30,7 @@ module SpartanBreakout(
    wire [6:0] blockAddr;
    wire blockAlive;
    wire [3:0] lives;
+   wire [4:0] score1000;
    wire [4:0] score100;
    wire [4:0] score10;
    wire [4:0] score1;
@@ -52,6 +53,7 @@ module SpartanBreakout(
       .BLOCK_ADDR(blockAddr),
       .BLOCK_ALIVE(blockAlive),
       .LIVES(lives),
+      .SCORE_1000(score1000),
       .SCORE_100(score100),
       .SCORE_10(score10),
       .SCORE_1(score1)
@@ -65,6 +67,7 @@ module SpartanBreakout(
       .BLOCK_ADDR(blockAddr),
       .BLOCK_ALIVE(blockAlive),
       .LIVES(lives),
+      .SCORE_1000(score1000),
       .SCORE_100(score100),
       .SCORE_10(score10),
       .SCORE_1(score1),
