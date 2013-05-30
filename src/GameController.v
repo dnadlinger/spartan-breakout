@@ -12,7 +12,7 @@ module GameController(
    output [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
    output [9:0] BALL_Y_PIXEL,
-   inout [6:0] BLOCK_ADDR,
+   input [6:0] BLOCK_ADDR,
    output BLOCK_ALIVE
    );
 
