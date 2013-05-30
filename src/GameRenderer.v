@@ -84,12 +84,13 @@ module GameRenderer(
    reg[7:0] blockColor;
    always @(blockRow) begin
       case (blockRow)
-         6'd0: blockColor <= 8'b00000111;
+         6'd0: blockColor <= 8'b00001111;
          6'd1: blockColor <= 8'b00011110;
          6'd2: blockColor <= 8'b00111111;
          6'd3: blockColor <= 8'b00110000;
-         6'd4: blockColor <= 8'b11010000;
-         6'd5: blockColor <= 8'b10000011;
+         6'd4: blockColor <= 8'b11101000;
+         6'd5: blockColor <= 8'b11001001;
+         6'd6: blockColor <= 8'b10000011;
          default: blockColor <= 8'b0;
       endcase
    end

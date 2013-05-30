@@ -126,7 +126,7 @@ module GamePhysics(
    reg adjYBlockAlive;
    reg [6:0] adjDiagBlock;
    reg adjDiagBlockAlive;
-   parameter invalidBlock = 7'd72;
+   parameter invalidBlock = blockRowCount * blockColCount + 7'd1;
 
    wire hitXBlock = cInBlockArea && canHitBlockX && adjXBlockAlive;
    wire hitYBlock = cInBlockArea && canHitBlockY && adjYBlockAlive;

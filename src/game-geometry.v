@@ -11,7 +11,7 @@ parameter gameEndXPixel = 10'd784;
 // Blocks.
 parameter blockStartXTile = 7'd2;
 parameter blockStartYTile = 7'd17;
-parameter blockRowCount = 3'd6;
+parameter blockRowCount = 3'd7;
 parameter blockColCount = 4'd12;
 
 // Player paddle.
