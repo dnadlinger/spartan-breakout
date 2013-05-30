@@ -29,6 +29,10 @@ module SpartanBreakout(
    wire [9:0] ballYPixel;
    wire [6:0] blockAddr;
    wire blockAlive;
+   wire [3:0] lives;
+   wire [4:0] score100;
+   wire [4:0] score10;
+   wire [4:0] score1;
    wire [sampleBits - 1:0] audioSelect;
    wire audioTrigger;
    GameController controller(
@@ -46,7 +50,11 @@ module SpartanBreakout(
       .BALL_X_PIXEL(ballXPixel),
       .BALL_Y_PIXEL(ballYPixel),
       .BLOCK_ADDR(blockAddr),
-      .BLOCK_ALIVE(blockAlive)
+      .BLOCK_ALIVE(blockAlive),
+      .LIVES(lives),
+      .SCORE_100(score100),
+      .SCORE_10(score10),
+      .SCORE_1(score1)
    );
 
    GameRenderer renderer(
@@ -56,6 +64,10 @@ module SpartanBreakout(
       .BALL_Y_PIXEL(ballYPixel),
       .BLOCK_ADDR(blockAddr),
       .BLOCK_ALIVE(blockAlive),
+      .LIVES(lives),
+      .SCORE_100(score100),
+      .SCORE_10(score10),
+      .SCORE_1(score1),
       .FRAME_DONE(frameDone),
       .COLOR(COLOR),
       .HSYNC(HSYNC),

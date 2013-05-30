@@ -13,6 +13,10 @@ module GameRenderer(
    input [9:0] BALL_Y_PIXEL,
    output [6:0] BLOCK_ADDR,
    input BLOCK_ALIVE,
+   input [2:0] LIVES,
+   input [3:0] SCORE_100,
+   input [3:0] SCORE_10,
+   input [3:0] SCORE_1,
    output reg FRAME_DONE,
    output [7:0] COLOR,
    output HSYNC,
@@ -52,10 +56,10 @@ module GameRenderer(
       .CLK(CLK),
       .CURR_X_PIXEL(currXPixel),
       .CURR_Y_PIXEL(currYPixel),
-      .LIVES(3'd1),
-      .SCORE_100(4'd1),
-      .SCORE_10(4'd2),
-      .SCORE_1(4'd3),
+      .LIVES(LIVES),
+      .SCORE_100(SCORE_100),
+      .SCORE_10(SCORE_10),
+      .SCORE_1(SCORE_1),
       .COLOR(statsColor)
    );
 
