@@ -1,6 +1,6 @@
 
 parameter sampleBits = 4;
-parameter sampleCount = 16;
+parameter sampleCount = 10;
 
 parameter Sample_paddle = 4'd0;
 parameter Sample_walls = 4'd1;
