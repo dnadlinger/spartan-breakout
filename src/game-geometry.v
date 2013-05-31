@@ -18,7 +18,7 @@ parameter blockColCount = 4'd12;
 parameter paddleLengthPixel = 10'd64;
 parameter paddleYTile = 7'd73;
 parameter paddleYPixel = paddleYTile * 10'd8;
-parameter paddleSpeedSubpixel = {10'd0, 6'd15};
+parameter paddleSpeedSubpixel = {10'd0, 6'd20};
 
 // Ball.
 parameter ballSizePixel = 10'd8;
