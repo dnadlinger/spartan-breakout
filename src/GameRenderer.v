@@ -37,7 +37,7 @@ module GameRenderer(
    parameter introColor = 8'b11000000;
    parameter gameOverColor = 8'b00000100;
 
-   wire finalColor =
+   wire [7:0] finalColor =
       ((SCREEN_SELECT == Screen_intro) * introColor) |
       ((SCREEN_SELECT == Screen_gameOver) * gameOverColor) |
       ((SCREEN_SELECT == Screen_inGame) * gameAreaColor) |
