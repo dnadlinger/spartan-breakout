@@ -12,6 +12,7 @@
 /// in the top left corner of the respective object.
 module GamePhysics(
    input CLK,
+   input [1:0] LEVEL_SELECT,
    input RESET,
    input START_UPDATE,
    input BTN_LEFT,
@@ -24,6 +25,7 @@ module GamePhysics(
    output reg HIT_BLOCK,
    output reg [2:0] HIT_BLOCK_ROW,
    output reg BALL_LOST,
+   output reg [6:0] BLOCKS_LEFT,
    output [9:0] PADDLE_X_PIXEL,
    output [9:0] BALL_X_PIXEL,
    output [9:0] BALL_Y_PIXEL,
@@ -64,6 +66,8 @@ module GamePhysics(
    parameter PhysPhase_update = 4'd7;
    parameter PhysPhase_storeYBlock = 4'd8;
    parameter PhysPhase_storeDiagBlock = 4'd9;
+   parameter PhysPhase_loadLevelBegin = 4'd10;
+   parameter PhysPhase_loadLevel = 4'd11;
    reg [3:0] physPhase;
 
    // Ball state.
@@ -138,6 +142,7 @@ module GamePhysics(
    wire hitDiagBlockHoriz = cInBlockArea && canHitBlockX && !hitXBlock && atYBlockBoundary && adjDiagBlockAlive;
    wire hitDiagBlockVert = cInBlockArea && canHitBlockY && !hitYBlock && atXBlockBoundary && adjDiagBlockAlive;
    wire hitDiagBlockDiag = cInBlockArea && canHitBlockX && canHitBlockY && !hitXBlock && !hitYBlock && adjDiagBlockAlive;
+   wire hitDiagBlock = hitDiagBlockHoriz || hitDiagBlockVert || hitDiagBlockDiag;
    wire hitLeftWall = ballAtTileX && ballGoesLeft && ballXTile == (leftWallXTile + 1);
    wire hitRightWall = ballAtTileX && !ballGoesLeft && ballXTile == (rightWallXTile - 1);
    wire hitCeiling = ballAtTileY && ballGoesUp && ballYTile == (ceilingYTile + 1);
@@ -151,10 +156,18 @@ module GamePhysics(
    // The ball is lost if it completely left the screen at the bottom.
    wire ballLost = cYTile == (paddleYTile + 7'd3) && !SW_IGNORE_DEATH;
 
+   // Level loading.
+   reg [6:0] romBlockAddr;
+   wire romBlockData;
+   LevelROM levelRom(
+      .CLK(CLK),
+      .ADDR({LEVEL_SELECT[0], romBlockAddr}),
+      .OUT(romBlockData)
+   );
+
    always @(posedge CLK) begin
       if (RESET) begin
          timestepCount <= 4'd0;
-         physPhase <= PhysPhase_extrapolate;
          ballState <= Ball_waitForRelease;
          ballX <= {10'd395, 6'h0};
          ballY <= {10'd400, 6'h0};
@@ -162,6 +175,10 @@ module GamePhysics(
          ballVelocityY <= 16'h0;
          paddleX <= {10'd370, 6'd0};
          BALL_LOST <= 1'b0;
+
+         romBlockAddr <= 7'd0;
+         BLOCKS_LEFT <= 7'd0;
+         physPhase <= PhysPhase_loadLevelBegin;
       end else case (physPhase)
          PhysPhase_extrapolate: begin
             blockStateWriteEnable <= 1'b0;
@@ -391,7 +408,7 @@ module GamePhysics(
                HIT_BLOCK_ROW <= ballGoesUp ? (cYBlock - 3'd1) : cYBlockPlusOne;
             end
 
-            if (hitDiagBlockHoriz || hitDiagBlockVert || hitDiagBlockDiag) begin
+            if (hitDiagBlock) begin
                adjDiagBlockAlive <= 1'b0;
                HIT_BLOCK <= 1'b1;
                HIT_BLOCK_ROW <= ballGoesUp ? (cYBlock - 3'd1) : cYBlockPlusOne;
@@ -433,6 +450,8 @@ module GamePhysics(
                end
             endcase
 
+            BLOCKS_LEFT <= BLOCKS_LEFT - hitXBlock - hitYBlock - hitDiagBlock;
+
             STEP_COMPLETE <= 1'b1;
 
             blockStateAddr <= adjXBlock;
@@ -463,6 +482,33 @@ module GamePhysics(
 
             // Advance phase.
             physPhase <= PhysPhase_extrapolate;
+         end
+
+         PhysPhase_loadLevelBegin: begin
+            romBlockAddr <= 7'd1;
+
+            // Advance phase.
+            physPhase <= PhysPhase_loadLevel;
+         end
+
+         PhysPhase_loadLevel: begin
+            blockStateAddr <= romBlockAddr - 7'd1;
+            blockStateWriteData <= romBlockData;
+            blockStateWriteEnable <= 1'b1;
+
+            if (romBlockData) begin
+               BLOCKS_LEFT <= BLOCKS_LEFT + 7'd1;
+            end
+
+            romBlockAddr <= romBlockAddr + 7'd1;
+
+            // +1 to be sure to set the dummmy block on the first round.
+            if (romBlockAddr == blockRowCount * blockColCount + 1) begin
+               physPhase <= PhysPhase_extrapolate;
+            end else begin
+               // Keep on loading.
+               physPhase <= PhysPhase_loadLevel;
+            end
          end
       endcase
    end

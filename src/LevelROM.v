@@ -1,0 +1,16 @@
+`timescale 1ns / 1ps
+
+module LevelROM(
+   input CLK,
+   input [7:0] ADDR,
+   output reg OUT
+   );
+
+   reg [255:0] mem =
+      {44'b0, 84'b111111111111010101010101101010101010010101010101101010101010010101010101111111111111,
+       44'b0, 84'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111};
+
+   always @(posedge CLK) begin
+      OUT <= mem[ADDR];
+   end
+endmodule

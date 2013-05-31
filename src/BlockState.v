@@ -10,8 +10,7 @@ module BlockState(
    output reg B_OUT
    );
 
-   reg [127:0] mem =
-      85'b0111111111111111111111111111111111111111111111111111111111111111111111111111111111111;
+   reg [127:0] mem;
 
    always @(posedge CLK) begin
       if (A_WRITE_ENABLE)
