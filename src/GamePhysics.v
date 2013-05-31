@@ -402,7 +402,7 @@ module GamePhysics(
                   if (BTN_RELEASE) begin
                      ballState <= Ball_inGame;
                      // TODO: Generate velocity based on frame counter.
-                     ballVelocityX <= {10'd0, 6'd8};
+                     ballVelocityX <= {10'd0, 6'd6};
                      ballVelocityY <= -{10'd0, 6'd16};
                   end
                   ballX <= {PADDLE_X_PIXEL + ((paddleLengthPixel - ballSizePixel) / 2), 6'd0};
