@@ -311,12 +311,10 @@ module GamePhysics(
          PhysPhase_collide: begin
             if (newPaddleX[15:6] == gameBeginXPixel - 1) begin
                newPaddleX <= {gameBeginXPixel, 6'd0};
-               // SOUND: Hit wall.
             end
 
             if (newPaddleX[15:6] == gameEndXPixel - paddleLengthPixel + 1) begin
                newPaddleX <= {gameEndXPixel - paddleLengthPixel, 6'd0};
-               // SOUND: Hit wall.
             end
 
             if (hitPaddle) begin
