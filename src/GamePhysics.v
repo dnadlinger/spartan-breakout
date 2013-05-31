@@ -141,9 +141,10 @@ module GamePhysics(
    wire hitLeftWall = ballAtTileX && ballGoesLeft && ballXTile == (leftWallXTile + 1);
    wire hitRightWall = ballAtTileX && !ballGoesLeft && ballXTile == (rightWallXTile - 1);
    wire hitCeiling = ballAtTileY && ballGoesUp && ballYTile == (ceilingYTile + 1);
+
+   wire [9:0] ballPaddleOffset = ballEndXPixel - PADDLE_X_PIXEL;
    wire hitPaddle = ballAtTileY && !ballGoesUp && ballYTile == (paddleYTile - 1) &&
-      (PADDLE_X_PIXEL - ballSizePixel < ballX[15:6]) &&
-      (ballX[15:6] < PADDLE_X_PIXEL + paddleLengthPixel);
+      ballPaddleOffset < (paddleLengthPixel + ballSizePixel - 1);
 
    // The ball is lost if it completely left the screen at the bottom.
    wire ballLost = cYTile == (paddleYTile + 7'd3) && !SW_IGNORE_DEATH;
