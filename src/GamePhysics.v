@@ -145,6 +145,8 @@ module GamePhysics(
    wire [9:0] ballPaddleOffset = ballEndXPixel - PADDLE_X_PIXEL;
    wire hitPaddle = ballAtTileY && !ballGoesUp && ballYTile == (paddleYTile - 1) &&
       ballPaddleOffset < (paddleLengthPixel + ballSizePixel - 1);
+   wire [15:0] negBallVelocityX = -ballVelocityX;
+   wire [15:0] negBallVelocityY = -ballVelocityY;
 
    // The ball is lost if it completely left the screen at the bottom.
    wire ballLost = cYTile == (paddleYTile + 7'd3) && !SW_IGNORE_DEATH;
@@ -319,36 +321,46 @@ module GamePhysics(
 
             if (hitPaddle) begin
                case (ballPaddleOffset[6:3])
-                  4'd0, 4'd1: begin
-                     ballVelocityX <= (ballGoesLeft ? ballVelocityX : -ballVelocityX) -
+                  4'd0: begin
+                     ballVelocityX <= (ballGoesLeft ? ballVelocityX : negBallVelocityX) -
                         {10'd0, 6'd6};
                      ballVelocityY <= -ballVelocityY + {10'd0, 6'd2};
                   end
                   4'd1: begin
-                     ballVelocityX <= ballGoesLeft ? ballVelocityX : -ballVelocityX;
-                     ballVelocityY <= -ballVelocityY;
+                     ballVelocityX <= (ballGoesLeft ? ballVelocityX : negBallVelocityX) -
+                        {10'd0, 6'd3};
+                     ballVelocityY <= -ballVelocityY + {10'd0, 6'd1};
                   end
-                  4'd3: begin
-                     ballVelocityX <= ballVelocityX +
-                        (ballGoesLeft ? {10'd0, 6'd2} : -{10'd0, 6'd2});
-                     ballVelocityY <= -(ballVelocityY + {10'd0, 6'd1});
+                  4'd2: begin
+                     if (ballGoesLeft) begin
+                        ballVelocityX <= ballVelocityX - {10'd0, 6'd1};
+                        ballVelocityY <= -ballVelocityY;
+                     end else begin
+                        ballVelocityX <= -{1'b0, ballVelocityX[15:1]};
+                        ballVelocityY <= -(ballVelocityY + ballVelocityX[15:1]);
+                     end
                   end
                   4'd4: begin
                      ballVelocityX <= ballVelocityX +
                         (ballGoesLeft ? {10'd0, 6'd4} : -{10'd0, 6'd4});
                      ballVelocityY <= -(ballVelocityY + {10'd0, 6'd5});
                   end
-                  4'd5:begin
-                     ballVelocityX <= ballVelocityX +
-                        (ballGoesLeft ? {10'd0, 6'd2} : -{10'd0, 6'd2});
-                     ballVelocityY <= -(ballVelocityY + {10'd0, 6'd1});
+                  4'd6: begin
+                     if (ballGoesLeft) begin
+                        ballVelocityX <= {1'b0, negBallVelocityX[15:1]};
+                        ballVelocityY <= -(ballVelocityY + negBallVelocityX[15:1]);
+                     end else begin
+                        ballVelocityX <= ballVelocityX + {10'd0, 6'd1};
+                        ballVelocityY <= -ballVelocityY;
+                     end
                   end
                   4'd7: begin
-                     ballVelocityX <= ballGoesLeft ? -ballVelocityX : ballVelocityX;
-                     ballVelocityY <= -ballVelocityY;
+                     ballVelocityX <= (ballGoesLeft ? negBallVelocityX : ballVelocityX) +
+                        {10'd0, 6'd3};
+                     ballVelocityY <= -ballVelocityY + {10'd0, 6'd1};
                   end
                   4'd8: begin
-                     ballVelocityX <= (ballGoesLeft ? -ballVelocityX : ballVelocityX) +
+                     ballVelocityX <= (ballGoesLeft ? negBallVelocityX : ballVelocityX) +
                         {10'd0, 6'd6};
                      ballVelocityY <= -ballVelocityY + {10'd0, 6'd2};
                   end
