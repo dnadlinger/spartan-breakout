@@ -403,6 +403,7 @@
     <!-- include files.                                                       -->
     <file xil_pn:name="src/game-geometry.v" xil_pn:type="FILE_VERILOG"/>
     <file xil_pn:name="src/audio-samples.v" xil_pn:type="FILE_VERILOG"/>
+    <file xil_pn:name="src/screens.v" xil_pn:type="FILE_VERILOG"/>
   </autoManagedFiles>
 
 </project>

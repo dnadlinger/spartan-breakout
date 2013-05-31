@@ -16,12 +16,15 @@ module SpartanBreakout(
    );
 
    `include "audio-samples.v"
+   `include "screens.v"
 
    reg initialReset = 1'b1;
    always @(posedge CLK_40M) begin
       initialReset <= 1'b0;
    end
    wire reset = initialReset | SW_RESET;
+
+   reg [1:0] currScreen;
 
    wire frameDone;
    wire [9:0] paddleXPixel;
@@ -36,9 +39,11 @@ module SpartanBreakout(
    wire [4:0] score1;
    wire [sampleBits - 1:0] audioSelect;
    wire audioTrigger;
+   wire gameOver;
+
    GameController controller(
       .CLK(CLK_40M),
-      .RESET(reset),
+      .RESET(reset | (currScreen == Screen_intro)),
       .FRAME_RENDERED(frameDone),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
@@ -56,11 +61,13 @@ module SpartanBreakout(
       .SCORE_1000(score1000),
       .SCORE_100(score100),
       .SCORE_10(score10),
-      .SCORE_1(score1)
+      .SCORE_1(score1),
+      .GAME_OVER(gameOver)
    );
 
    GameRenderer renderer(
       .CLK(CLK_40M),
+      .SCREEN_SELECT(currScreen),
       .PADDLE_X_PIXEL(paddleXPixel),
       .BALL_X_PIXEL(ballXPixel),
       .BALL_Y_PIXEL(ballYPixel),
@@ -83,4 +90,30 @@ module SpartanBreakout(
       .TRIGGER(audioTrigger),
       .AUDIO(AUDIO_OUT)
    );
+
+   always @(posedge CLK_40M) begin
+      if (reset) begin
+         currScreen <= Screen_intro;
+      end else begin
+         case (currScreen)
+            Screen_intro: begin
+               if (BTN_A || BTN_B) begin
+                  currScreen <= Screen_inGame;
+               end
+            end
+
+            Screen_inGame: begin
+               if (gameOver) begin
+                  currScreen <= Screen_gameOver;
+               end
+            end
+
+            Screen_gameOver: begin
+               if (BTN_A || BTN_B) begin
+                  currScreen <= Screen_intro;
+               end
+            end
+         endcase
+      end
+   end
 endmodule

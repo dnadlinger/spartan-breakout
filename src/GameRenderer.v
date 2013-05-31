@@ -8,6 +8,7 @@
 /// There are two fundamental units: Raw pixels, and 8 px by 8 px "blocks".
 module GameRenderer(
    input CLK,
+   input [1:0] SCREEN_SELECT,
    input [9:0] PADDLE_X_PIXEL,
    input [9:0] BALL_X_PIXEL,
    input [9:0] BALL_Y_PIXEL,
@@ -25,6 +26,7 @@ module GameRenderer(
    );
 
    `include "game-geometry.v"
+   `include "screens.v"
 
    // The whole logic is driven by the SVGA interface.
    wire [10:0] currXPixel;
@@ -32,9 +34,18 @@ module GameRenderer(
    wire [7:0] gameAreaColor;
    wire [7:0] statsColor;
 
+   parameter introColor = 8'b11000000;
+   parameter gameOverColor = 8'b00000100;
+
+   wire finalColor =
+      ((SCREEN_SELECT == Screen_intro) * introColor) |
+      ((SCREEN_SELECT == Screen_gameOver) * gameOverColor) |
+      ((SCREEN_SELECT == Screen_inGame) * gameAreaColor) |
+      ((SCREEN_SELECT != Screen_intro) * statsColor);
+
    SVGAInterface videoInterface(
       .CLK(CLK),
-      .COLOR_IN(gameAreaColor | statsColor),
+      .COLOR_IN(finalColor),
       .X_PIXEL(currXPixel),
       .Y_PIXEL(currYPixel),
       .COLOR_OUT(COLOR),
