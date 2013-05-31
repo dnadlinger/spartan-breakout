@@ -15,7 +15,7 @@ parameter blockRowCount = 3'd7;
 parameter blockColCount = 4'd12;
 
 // Player paddle.
-parameter paddleLengthPixel = 10'd60;
+parameter paddleLengthPixel = 10'd64;
 parameter paddleYTile = 7'd73;
 parameter paddleYPixel = paddleYTile * 10'd8;
 parameter paddleSpeedSubpixel = {10'd0, 6'd15};
