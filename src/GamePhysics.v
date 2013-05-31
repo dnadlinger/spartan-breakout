@@ -168,12 +168,21 @@ module GamePhysics(
    always @(posedge CLK) begin
       if (RESET) begin
          timestepCount <= 4'd0;
-         ballState <= Ball_waitForRelease;
          ballX <= {10'd395, 6'h0};
          ballY <= {10'd400, 6'h0};
-         ballVelocityX <= 16'h0;
-         ballVelocityY <= 16'h0;
          paddleX <= {10'd370, 6'd0};
+
+         if (LEVEL_SELECT == 2'd0) begin
+            ballState <= Ball_waitForRelease;
+            ballVelocityX <= 16'd0;
+            ballVelocityY <= 16'd0;
+         end else begin
+            ballState <= Ball_inGame;
+            // TODO: Generate velocity based on frame counter.
+            ballVelocityX <= -{10'd0, 6'd10};
+            ballVelocityY <= -{10'd0, 6'd32};
+         end
+
          BALL_LOST <= 1'b0;
 
          romBlockAddr <= 7'd0;
