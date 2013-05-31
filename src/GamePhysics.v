@@ -319,12 +319,54 @@ module GamePhysics(
                // SOUND: Hit wall.
             end
 
-            if (hitLeftWall || hitRightWall || hitXBlock || hitDiagBlockHoriz || hitDiagBlockDiag) begin
-               ballVelocityX <= -ballVelocityX;
-            end
+            if (hitPaddle) begin
+               case (ballPaddleOffset[6:3])
+                  4'd0, 4'd1: begin
+                     ballVelocityX <= (ballGoesLeft ? ballVelocityX : -ballVelocityX) -
+                        {10'd0, 6'd6};
+                     ballVelocityY <= -ballVelocityY + {10'd0, 6'd2};
+                  end
+                  4'd1: begin
+                     ballVelocityX <= ballGoesLeft ? ballVelocityX : -ballVelocityX;
+                     ballVelocityY <= -ballVelocityY;
+                  end
+                  4'd3: begin
+                     ballVelocityX <= ballVelocityX +
+                        (ballGoesLeft ? {10'd0, 6'd2} : -{10'd0, 6'd2});
+                     ballVelocityY <= -(ballVelocityY + {10'd0, 6'd1});
+                  end
+                  4'd4: begin
+                     ballVelocityX <= ballVelocityX +
+                        (ballGoesLeft ? {10'd0, 6'd4} : -{10'd0, 6'd4});
+                     ballVelocityY <= -(ballVelocityY + {10'd0, 6'd5});
+                  end
+                  4'd5:begin
+                     ballVelocityX <= ballVelocityX +
+                        (ballGoesLeft ? {10'd0, 6'd2} : -{10'd0, 6'd2});
+                     ballVelocityY <= -(ballVelocityY + {10'd0, 6'd1});
+                  end
+                  4'd7: begin
+                     ballVelocityX <= ballGoesLeft ? -ballVelocityX : ballVelocityX;
+                     ballVelocityY <= -ballVelocityY;
+                  end
+                  4'd8: begin
+                     ballVelocityX <= (ballGoesLeft ? -ballVelocityX : ballVelocityX) +
+                        {10'd0, 6'd6};
+                     ballVelocityY <= -ballVelocityY + {10'd0, 6'd2};
+                  end
+                  default: begin
+                     ballVelocityX <= ballVelocityX;
+                     ballVelocityY <= -ballVelocityY;
+                  end
+               endcase
+            end else begin
+               if (hitLeftWall || hitRightWall || hitXBlock || hitDiagBlockHoriz || hitDiagBlockDiag) begin
+                  ballVelocityX <= -ballVelocityX;
+               end
 
-            if (hitCeiling || hitPaddle || hitYBlock || hitDiagBlockVert || hitDiagBlockDiag) begin
-               ballVelocityY <= -ballVelocityY;
+               if (hitCeiling || hitYBlock || hitDiagBlockVert || hitDiagBlockDiag) begin
+                  ballVelocityY <= -ballVelocityY;
+               end
             end
 
             if (hitXBlock) begin
