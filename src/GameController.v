@@ -3,7 +3,7 @@
 module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
    BTN_RELEASE, SW_PAUSE, SW_IGNORE_DEATH, AUDIO_SELECT, AUDIO_TRIGGER,
    PADDLE_X_PIXEL, BALL_X_PIXEL, BALL_Y_PIXEL, BLOCK_ADDR, BLOCK_ALIVE,
-   LIVES, SCORE_1000, SCORE_100, SCORE_10, SCORE_1);
+   LIVES, SCORE_1000, SCORE_100, SCORE_10, SCORE_1, GAME_OVER);
 
    `include "audio-samples.v"
    `include "game-geometry.v"
@@ -28,6 +28,7 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
    output [3:0] SCORE_100;
    output [3:0] SCORE_10;
    output [3:0] SCORE_1;
+   output reg GAME_OVER;
 
    wire stepComplete;
    wire hitWall;
@@ -35,11 +36,12 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
    wire hitBlock;
    wire [2:0] hitBlockRow;
    wire ballLost;
+   wire [6:0] blocksLeft;
 
    GamePhysics physics(
       .CLK(CLK),
       .RESET(RESET),
-      .START_UPDATE(FRAME_RENDERED && !SW_PAUSE),
+      .START_UPDATE(FRAME_RENDERED && !SW_PAUSE && !GAME_OVER),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
       .BTN_RELEASE(BTN_RELEASE),
@@ -50,6 +52,7 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
       .HIT_BLOCK(hitBlock),
       .HIT_BLOCK_ROW(hitBlockRow),
       .BALL_LOST(ballLost),
+      .BLOCKS_LEFT(blocksLeft),
       .PADDLE_X_PIXEL(PADDLE_X_PIXEL),
       .BALL_X_PIXEL(BALL_X_PIXEL),
       .BALL_Y_PIXEL(BALL_Y_PIXEL),
@@ -90,6 +93,14 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
          if (stepComplete && ballLost) begin
             LIVES <= LIVES - 3'd1;
          end
+      end
+   end
+
+   always @(posedge CLK) begin
+      if (RESET) begin
+         GAME_OVER <= 1'b0;
+      end else begin
+         loadLevel <= 1'b0;
       end
    end
 
