@@ -44,7 +44,7 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
    GamePhysics physics(
       .CLK(CLK),
       .LEVEL_SELECT(currLevel),
-      .RESET(RESET | loadLevel),
+      .RESET(RESET || loadLevel),
       .START_UPDATE(FRAME_RENDERED && !SW_PAUSE && !GAME_OVER),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
@@ -110,9 +110,9 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
 
    always @(posedge CLK) begin
       if (RESET) begin
-         loadLevel <= 1'b0;
+         loadLevel <= 1'b1;
          currLevel <= 2'd0;
-      end else if (blocksLeft == 7'd0) begin
+      end else if (stepComplete && blocksLeft == 7'd0) begin
          currLevel <= currLevel + 2'd1;
          loadLevel <= 1'b1;
       end else begin
