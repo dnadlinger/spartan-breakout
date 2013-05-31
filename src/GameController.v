@@ -38,9 +38,13 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
    wire ballLost;
    wire [6:0] blocksLeft;
 
+   reg [1:0] currLevel;
+   reg loadLevel;
+
    GamePhysics physics(
       .CLK(CLK),
-      .RESET(RESET),
+      .LEVEL_SELECT(currLevel),
+      .RESET(RESET | loadLevel),
       .START_UPDATE(FRAME_RENDERED && !SW_PAUSE && !GAME_OVER),
       .BTN_LEFT(BTN_LEFT),
       .BTN_RIGHT(BTN_RIGHT),
@@ -99,6 +103,18 @@ module GameController(CLK, RESET, FRAME_RENDERED, BTN_LEFT, BTN_RIGHT,
    always @(posedge CLK) begin
       if (RESET) begin
          GAME_OVER <= 1'b0;
+      end else if (LIVES == 3'd0) begin
+         GAME_OVER <= 1'b1;
+      end
+   end
+
+   always @(posedge CLK) begin
+      if (RESET) begin
+         loadLevel <= 1'b0;
+         currLevel <= 2'd0;
+      end else if (blocksLeft == 7'd0) begin
+         currLevel <= currLevel + 2'd1;
+         loadLevel <= 1'b1;
       end else begin
          loadLevel <= 1'b0;
       end
