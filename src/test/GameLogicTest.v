@@ -22,7 +22,7 @@ module GameLogicTest;
 
    // 40 MHz clock.
    always begin
-      #12.5;
+      #1.25;
       CLK = ~CLK;
    end
 
@@ -44,7 +44,7 @@ module GameLogicTest;
       #100;
       BTN_LEFT = 1;
       START_UPDATE = 1;
-      #12.5
+      #1.25
       START_UPDATE = 0;
       #10000;
       BTN_LEFT = 0;
