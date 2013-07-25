@@ -32,11 +32,11 @@ module SpartanBreakout(
    wire [9:0] ballYPixel;
    wire [6:0] blockAddr;
    wire blockAlive;
-   wire [3:0] lives;
-   wire [4:0] score1000;
-   wire [4:0] score100;
-   wire [4:0] score10;
-   wire [4:0] score1;
+   wire [2:0] lives;
+   wire [3:0] score1000;
+   wire [3:0] score100;
+   wire [3:0] score10;
+   wire [3:0] score1;
    wire [sampleBits - 1:0] audioSelect;
    wire audioTrigger;
    wire gameOver;
