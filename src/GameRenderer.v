@@ -33,12 +33,12 @@ module GameRenderer(
    wire [9:0] currYPixel;
    wire [7:0] gameAreaColor;
    wire [7:0] statsColor;
+   wire [7:0] bitmapColor;
 
-   parameter introColor = 8'b11000000;
-   parameter gameOverColor = 8'b00000100;
+   parameter gameOverColor = 8'b00000111;
 
    wire [7:0] finalColor =
-      ((SCREEN_SELECT == Screen_intro) * introColor) |
+      ((SCREEN_SELECT == Screen_intro) * bitmapColor) |
       ((SCREEN_SELECT == Screen_gameOver) * gameOverColor) |
       ((SCREEN_SELECT == Screen_inGame) * gameAreaColor) |
       ((SCREEN_SELECT != Screen_intro) * statsColor);
@@ -74,6 +74,15 @@ module GameRenderer(
       .SCORE_10(SCORE_10),
       .SCORE_1(SCORE_1),
       .COLOR(statsColor)
+   );
+
+   BitmapRenderer bitmapRenderer(
+      .CLK(CLK),
+      .RESET(currXPixel == 0 && currYPixel == 0),
+      .INIT_ADDR(Bitmap_gameOver),
+      .CURR_X_PIXEL(currXPixel),
+      .CURR_Y_PIXEL(currYPixel),
+      .COLOR(bitmapColor)
    );
 
    // Synchronously generate the syncing signal for the game logic.
